@@ -1,0 +1,361 @@
+
+<style type="text/css">
+body{
+	background-color:#293441;
+}
+.left{
+	float:left;
+}
+.right{
+	float:left;
+}
+.left01{
+	height:300px;
+	width:400px;
+	margin-left:5px;
+	margin-top:5px;
+	border:1px solid;
+	border-radius:25px;
+	border-color:white;
+}
+
+
+.left03{
+	height:300px;
+	width:400px;
+	margin-left:5px;
+	margin-top:5px;
+	border:1px solid;
+	border-radius:25px;
+	border-color:white;
+}
+.right01{
+	height:300px;
+	width:600px;
+	margin-left:5px;
+	margin-top:5px;
+	border:1px solid;
+	border-radius:25px;
+	border-color:white;
+}
+.right03{
+	height:300px;
+	width:600px;
+	margin-left:5px;
+	margin-top:5px;
+	border:1px solid;
+	border-radius:25px;
+	border-color:white;
+}
+</style>
+</head>
+<body>
+<div class="main" id="main">
+			<div class="left">
+			<div id="left01" class="left01">
+				left01
+			</div>
+			<div id="left03" class="left03">
+				left03	
+			</div>
+			</div>
+			<div class="right">
+				<div id="right01" class="right01">
+					right01	
+				</div> 
+				<div id="right03" class="right03">
+					right03
+				</div> 
+			</div>
+
+
+</div>
+
+<script type="text/javascript" src="assets/echarts/echarts.min.js" ></script>
+<script type="text/javascript" src="assets/echarts/echarts-liquidfill.js" ></script>
+<script type="text/javascript" src="assets/echarts/chalk.js" ></script>
+<script type="text/javascript">
+
+
+$(function(){
+	initLeft01();
+	initRight01();
+	initLeft03();
+	initRight03();
+})
+
+/**
+ * 初始化左边第一个图标
+ */
+function initLeft01(){
+	echarts.init(document.getElementById('left01'), 'chalk')
+	var myChart = echarts.init(document.getElementById('left01'));
+	option = {
+			title: {
+		        text: '服务器空间占用',
+		        subtext: ''
+		    },
+		    series: [{
+		        type: 'liquidFill',
+		        data: [0.6, 0.5, 0.4, 0.3],
+		        radius: '80%'
+		    }]
+		};
+	
+	myChart.setOption(option);
+}
+
+/**
+ * 初始化右边第一个图表
+ * 
+ */
+
+function initRight01(){
+	echarts.init(document.getElementById('right01'), 'chalk')
+	var myChart = echarts.init(document.getElementById('right01'));
+	option = {
+		    title: {
+		        text: '网络监控',
+		        subtext: ''
+		    },
+		    tooltip: {
+		        trigger: 'axis'
+		    },
+		    legend: {
+		        data:['上传','下载']
+		    },
+		    toolbox: {
+		    },
+		    xAxis:  {
+		        type: 'category',
+		        boundaryGap: false,
+		        data: ['周一','周二','周三','周四','周五','周六','周日']
+		    },
+		    yAxis: {
+		        type: 'value',
+		        axisLabel: {
+		            formatter: '{value} k/s'
+		        }
+		    },
+		    series: [
+		        {
+		            name:'最高速度',
+		            type:'line',
+		            data:[111, 111, 151, 131, 121, 131, 101],
+		            markPoint: {
+		                data: [
+		                    {type: 'max', name: '最大值'},
+		                    {type: 'min', name: '最小值'}
+		                ]
+		            },
+		            markLine: {
+		                data: [
+		                    {type: 'average', name: '平均值'}
+		                ]
+		            }
+		        },
+		        {
+		            name:'最低速度',
+		            type:'line',
+		            data:[11, 21, 21, 51, 31, 21, 10],
+		            markPoint: {
+		                data: [
+		                    {name: '周最低', value: 21, xAxis: 11, yAxis: 15}
+		                ]
+		            },
+		            markLine: {
+		                data: [
+		                    {type: 'average', name: '平均值'},
+		                    [{
+		                        symbol: 'none',
+		                        x: '90%',
+		                        yAxis: 'max'
+		                    }, {
+		                        symbol: 'circle',
+		                        label: {
+		                            normal: {
+		                                position: 'start',
+		                                formatter: '最大值'
+		                            }
+		                        },
+		                        type: 'max',
+		                        name: '最高点'
+		                    }]
+		                ]
+		            }
+		        }
+		    ]
+		};
+	myChart.setOption(option);
+}
+
+
+
+
+function initLeft03(){
+	echarts.init(document.getElementById('left03'), 'chalk')
+	var myChart = echarts.init(document.getElementById('left03'));
+	option = {
+	    title: {
+	        text: '节点监控',
+	        subtext: ''
+	    },
+	    toolbox:{},
+	    tooltip: {
+	        trigger: 'axis',
+	        axisPointer: {
+	            type: 'shadow'
+	        }
+	    },
+	    legend: {
+	        data: ['数量']
+	    },
+	    grid: {
+	        left: '3%',
+	        right: '4%',
+	        bottom: '3%',
+	        containLabel: true
+	    },
+	    xAxis: {
+	        type: 'value',
+	        boundaryGap: [0, 0.01]
+	    },
+	    yAxis: {
+	        type: 'category',
+	        data: ['损失','掉线','正常']
+	    },
+	    series: [
+	        {
+	            name: '数量',
+	            type: 'bar',
+	            data: [5, 30, 100]
+	        }
+	    ]
+	};
+	myChart.setOption(option);
+}
+
+function initRight03(){
+	echarts.init(document.getElementById('right03'), 'chalk')
+	var myChart = echarts.init(document.getElementById('right03'));
+	var category = [];
+	var dottedBase = +new Date();
+	var lineData = [];
+	var barData = [];
+
+	for (var i = 0; i < 20; i++) {
+	    var date = new Date(dottedBase += 1000 * 3600 * 24);
+	    category.push([
+	        date.getFullYear(),
+	        date.getMonth() + 1,
+	        date.getDate()
+	    ].join('-'));
+	    var b = Math.random() * 200;
+	    var d = Math.random() * 200;
+	    barData.push(b)
+	    lineData.push(d + b);
+	}
+
+
+	// option
+	option = {
+		title: {
+	        text: '节点数量',
+	        subtext: ''
+	    },
+	    backgroundColor: '#0f375f',
+	    tooltip: {
+	        trigger: 'axis',
+	        axisPointer: {
+	            type: 'shadow',
+	            label: {
+	                show: true,
+	                backgroundColor: '#333'
+	            }
+	        }
+	    },
+	    legend: {
+	        data: ['line', 'bar'],
+	        textStyle: {
+	            color: '#ccc'
+	        }
+	    },
+	    xAxis: {
+	        data: category,
+	        axisLine: {
+	            lineStyle: {
+	                color: '#ccc'
+	            }
+	        }
+	    },
+	    yAxis: {
+	        splitLine: {show: false},
+	        axisLine: {
+	            lineStyle: {
+	                color: '#ccc'
+	            }
+	        }
+	    },
+	    series: [{
+	        name: 'line',
+	        type: 'line',
+	        smooth: true,
+	        showAllSymbol: true,
+	        symbol: 'emptyCircle',
+	        symbolSize: 15,
+	        data: lineData
+	    }, {
+	        name: 'bar',
+	        type: 'bar',
+	        barWidth: 10,
+	        itemStyle: {
+	            normal: {
+	                barBorderRadius: 5,
+	                color: new echarts.graphic.LinearGradient(
+	                    0, 0, 0, 1,
+	                    [
+	                        {offset: 0, color: '#14c8d4'},
+	                        {offset: 1, color: '#43eec6'}
+	                    ]
+	                )
+	            }
+	        },
+	        data: barData
+	    }, {
+	        name: 'line',
+	        type: 'bar',
+	        barGap: '-100%',
+	        barWidth: 10,
+	        itemStyle: {
+	            normal: {
+	                color: new echarts.graphic.LinearGradient(
+	                    0, 0, 0, 1,
+	                    [
+	                        {offset: 0, color: 'rgba(20,200,212,0.5)'},
+	                        {offset: 0.2, color: 'rgba(20,200,212,0.2)'},
+	                        {offset: 1, color: 'rgba(20,200,212,0)'}
+	                    ]
+	                )
+	            }
+	        },
+	        z: -12,
+	        data: lineData
+	    }, {
+	        name: 'dotted',
+	        type: 'pictorialBar',
+	        symbol: 'rect',
+	        itemStyle: {
+	            normal: {
+	                color: '#0f375f'
+	            }
+	        },
+	        symbolRepeat: true,
+	        symbolSize: [12, 4],
+	        symbolMargin: 1,
+	        z: -10,
+	        data: lineData
+	    }]
+	};
+	myChart.setOption(option);
+}
+</script>

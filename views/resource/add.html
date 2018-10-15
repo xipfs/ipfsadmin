@@ -1,0 +1,58 @@
+
+
+<div class="alert alert-warning alert-dismissible hide" role="alert"></div>
+
+<form class="form-horizontal ajax-form" method="post" action="{{urlfor "ResourceController.Add"}}">
+	<div class="form-group">
+		<label for="resource_name" class="col-sm-2 control-label">资源名称</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="resource_name" name="resource_name">
+		</div>
+	</div>
+	
+	<div class="form-group">
+		<label for="resource_domain" class="col-sm-2 control-label">资源标识</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="resource_domain" name="resource_domain">
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="resource_version" class="col-sm-2 control-label">资源版本</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="resource_version" name="resource_version">
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="resource_md5" class="col-sm-2 control-label">MD5</label>
+		<div class="col-sm-3">
+			<input type="text" class="form-control" id="resource_md5" name="resource_md5">
+		</div>
+	</div>
+
+	<div class="hr hr-16 hr-dotted"></div>
+	<div class="form-group">
+		<label for="task_review" class="col-sm-2 control-label">发布单是否需要经过审批</label>
+		<div class="col-sm-5">
+			<div class="radio-inline">
+				<label>
+					<input type="radio" name="task_review" value="1" checked />
+					需要
+				</label>
+			</div>
+			<div class="radio-inline">
+				<label>
+					<input type="radio" name="task_review" value="0" checked />
+					不需要
+				</label>
+			</div>
+		</div>
+	</div>
+	
+	<div class="clearfix form-actions">
+		<div class="col-sm-offset-2 col-sm-10">
+			<button type="submit" class="btn btn-info"><i class="ace-icon fa fa-check bigger-110"></i>提交</button>
+			<a href="{{urlfor "ResourceController.List"}}" class="btn btn-default"><i class="ace-icon fa fa-reply bigger-110"></i>返回</a>
+		</div>
+	</div>
+</form>
+

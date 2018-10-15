@@ -1,0 +1,37 @@
+
+		<div class="row">
+			<div class="col-xs-12">
+			<a href="{{urlfor "ApiController.Add"}}" class="btn btn-sm btn-default"><i class="fa fa-plus"></i> 添加API</a>
+			</div>
+		</div>
+
+		<div class="space-4"></div>
+
+		<div class="row">
+			<div class="col-xs-12">
+				<table class="table table-striped table-bordered table-hover">
+					<thead>
+					<tr>
+						<th width="50">ID</th>
+						<th width="120">名称</th>
+						<th width="200">URL</th>
+						<th width="200">描述</th>
+					</tr>
+					</thead>
+					<tbody>
+					{{range $k, $v := .list}}
+						<tr>
+							<td class="center">{{$v.Id}}</td>
+							<td>{{$v.Name}}</td>
+							<td>{{$v.Url}}</td>
+							<td>{{$v.Desc}}</td>							
+						</tr>
+					{{end}}
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-xs-12">{{str2html .pageBar}}</div>
+		</div>

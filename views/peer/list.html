@@ -1,0 +1,80 @@
+
+<div class="space-4"></div>
+								
+<div class="row">
+	<div class="col-xs-12">
+	
+	<div class="tabbable">
+		<ul class="nav nav-tabs" id="list-tab">
+			<li class="active">
+				<a href="{{urlfor "PeerController.List"}}">节点列表</a>
+			</li>
+		</ul>
+	
+		<div class="tab-content">
+		<div class="row">
+			<div class="col-xs-12">
+				<form class="form-inline" method="post" action="{{urlfor "PeerController.List"}}">
+					<div class="input-group input-group-sm">
+						<select name="status">
+							<option value="1" {{if eq $.status 1}}selected{{end}}>正常</option>
+							<option value="2" {{if eq $.status 2}}selected{{end}}>超时</option>
+							<option value="3" {{if eq $.status 3}}selected{{end}}>死亡</option>
+						</select>
+					</div>
+					<div class="input-group input-group-sm">
+						<button type="submit" class="btn">查询</button>
+					</div>
+				</form>
+			</div>
+		</div>
+		<div class="space-4"></div>
+
+		<table class="table table-striped table-bordered table-hover">
+			<thead>
+			<tr>
+				<th>id</th>
+				<th>Peer</th>
+				<th>已使用空间</th>
+				<th>总存储空间</th>
+				<th>对象数量</th>
+				<th>同步时间</th>
+				<th>状态</th>
+				<th>操作</th>
+			</tr>
+			</thead>
+			<tbody>
+			{{range $k, $v := .list}}
+				<tr>
+					<td class="center"><a href="{{urlfor "PeerController.Detail" "id" $v.Id}}">{{$v.Id}}</a></td>
+					<td>{{$v.PeerId}}</td>
+					<td>{{$v.RepoSize}}</td>
+					<td>{{$v.StorageMax}}</td>
+					<td>{{$v.NumObjects}}</td>
+					<td>{{date $v.UpdateTime "Y-m-d H:i:s"}}</td>
+					<td>{{if eq $v.Status 1}}<b class="green">正常</b>{{end}}</td>
+					<td>
+					<a href="{{urlfor "PeerController.Detail" "id" $v.Id}}" class="btn btn-minier btn-info">节点详情</a>
+					</td>
+				</tr>
+			{{end}}
+			
+			{{if eq .count 0}}
+				<tr>
+					<td colspan="20">暂无记录...</td>
+				</tr>
+			{{end}}
+			</tbody>
+			<tfoot>
+				<tr>
+					<td colspan="10">{{str2html .pageBar}}</td>
+				</tr>
+			</tfoot>
+		</table>
+		</div>
+	</div>
+	</div>
+</div>
+
+<script>
+</script>

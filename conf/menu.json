@@ -1,0 +1,75 @@
+[
+	{
+		"name": "节点管理",
+		"icon": "fa-globe",
+		"route": "#",
+		"submenu": [
+			{
+				"name": "节点列表",
+				"route": "peer.list",
+				"action": "PeerController.List"
+			}
+		]
+	}, 
+	{
+		"name": "发布管理",
+		"icon": "fa-cloud-upload",
+		"route": "#",
+		"submenu": [
+			{
+				"name": "新建发布单",
+				"route": "task.create",
+				"action": "TaskController.Create"
+			},
+			{
+				"name": "发布单列表",
+				"route": "task.list",
+				"action": "TaskController.List"
+			}
+		]
+	}, 
+	{
+		"name": "资源管理",
+		"icon": "fa-bars",
+		"route": "#",
+		"submenu": [
+			{
+				"name": "资源管理",
+				"route": "resource.list",
+				"action": "ResourceController.List"
+			},
+			{
+				"name": "服务器管理",
+				"route": "server.list",
+				"action": "ServerController.List"
+			}
+		]
+	}, 
+	{
+		"name": "系统管理",
+		"icon": "fa-cog",
+		"route": "#",
+		"submenu": [
+			{
+				"name": "API管理",
+				"route": "api.list",
+				"action": "ApiController.List"
+			},
+			{
+				"name": "角色管理",
+				"route": "role.list",
+				"action": "RoleController.List"
+			},
+			{
+				"name": "邮件模板",
+				"route": "mailtpl.list",
+				"action": "MailTplController.List"
+			},
+			{
+				"name": "用户管理",
+				"route": "user.list",
+				"action": "UserController.List"
+			}
+		]
+	}
+]
