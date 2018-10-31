@@ -30,7 +30,7 @@ func main() {
 		beego.SetLevel(beego.LevelDebug)
 	} else {
 		beego.SetLevel(beego.LevelInformational)
-		beego.SetLogger("file", `{"filename":"`+beego.AppConfig.String("log_file")+`"}`)
+		beego.SetLogger("file", `{"maxdays":90,"filename":"`+beego.AppConfig.String("log_file")+`"}`)
 		beego.BeeLogger.DelLogger("console")
 	}
 

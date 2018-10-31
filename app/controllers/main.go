@@ -28,6 +28,7 @@ type MainController struct {
 // 首页
 func (this *MainController) Index() {
 	this.Data["pageTitle"] = "系统概况"
+	service.PeerService.SyncPeerStat()
 	resourcesStat := service.TaskService.GetResourcePubStat()
 	popResources := make([]map[string]interface{}, 0, 4)
 	for k, stat := range resourcesStat {
@@ -226,7 +227,8 @@ func (this *MainController) Login() {
 					this.Ctx.SetCookie("auth", token)
 				}
 				service.ActionService.Login(username, this.auth.GetUserId(), this.getClientIp())
-				this.redirect(beego.URLFor(".Index"))
+				fmt.Println("login ...")
+				this.redirect("/main/index")
 			}
 
 		}

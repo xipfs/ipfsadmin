@@ -20,6 +20,7 @@ import (
 	"os"
 
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
 	"github.com/gogo/protobuf/proto"
 	"github.com/xipfs/ipfsadmin/app/entity"
 	"github.com/xipfs/ipfsadmin/app/libs"
@@ -65,6 +66,7 @@ func (this *PeerController) Report() {
 	reportRecordList := &msg.ReportRecordList{}
 	requestBody := this.GetRequestBody()
 	proto.Unmarshal(requestBody, reportRecordList)
+	logs.Info("ReportRecord : %v", reportRecordList)
 	fmt.Println(reportRecordList)
 	const base_format = "2006-01-02 15:04:05"
 	peerId := ""

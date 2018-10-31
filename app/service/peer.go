@@ -85,6 +85,13 @@ func (this *peerService) DeletePeer(peerId int) error {
 	return nil
 }
 
+func (this *peerService) SyncPeerStat() {
+	var sql string
+	var maps []orm.Params
+	sql = fmt.Sprintf("update t_peer set STATUS = 3 where DATE_SUB(CURDATE(), INTERVAL 7 DAY) > update_time")
+	o.Raw(sql).Values(&maps)
+}
+
 // 节点统计
 func (this *peerService) GetPeerStat(rangeType string) map[int]int {
 	var sql string

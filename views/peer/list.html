@@ -52,7 +52,10 @@
 					<td>{{$v.StorageMax}}</td>
 					<td>{{$v.NumObjects}}</td>
 					<td>{{date $v.UpdateTime "Y-m-d H:i:s"}}</td>
-					<td>{{if eq $v.Status 1}}<b class="green">正常</b>{{end}}</td>
+					<td>{{if eq $v.Status 1}}<b class="green">正常</b>{{end}}
+						{{if eq $v.Status 2}}<b class="green">超时</b>{{end}}
+						{{if eq $v.Status 3}}<b class="red">死亡</b>{{end}}
+					</td>
 					<td>
 					<a href="{{urlfor "PeerController.Detail" "id" $v.Id}}" class="btn btn-minier btn-info">节点详情</a>
 					</td>
