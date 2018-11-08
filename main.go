@@ -53,7 +53,6 @@ func main() {
 	beego.AutoRouter(&controllers.ApiController{})
 	beego.AutoRouter(&controllers.MainController{})
 
-	// 记录启动时间
 	beego.AppConfig.Set("up_time", fmt.Sprintf("%d", time.Now().Unix()))
 
 	beego.AddFuncMap("i18n", i18n.Tr)

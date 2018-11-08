@@ -22,9 +22,20 @@ type ConfigController struct {
 	BaseController
 }
 
+//DownloadConfig 下载配置
+type DownloadConfig struct {
+	ChannelDownloadConfig map[string]ChannelDownloadConfig
+}
+
+//ChannelDownloadConfig 渠道下载配置
+type ChannelDownloadConfig struct {
+	DownloadHeader map[string]string
+}
+
 type ConfigJson struct {
-	Version    string
-	DataReport *DataReport
+	Version        string
+	DataReport     *DataReport
+	DownloadConfig *DownloadConfig
 }
 
 type DataReport struct {

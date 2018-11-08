@@ -19,6 +19,8 @@ import (
 	"net/http"
 	"os"
 
+	"encoding/json"
+
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"github.com/gogo/protobuf/proto"
@@ -66,8 +68,14 @@ func (this *PeerController) Report() {
 	reportRecordList := &msg.ReportRecordList{}
 	requestBody := this.GetRequestBody()
 	proto.Unmarshal(requestBody, reportRecordList)
-	logs.Info("ReportRecord : %v", reportRecordList)
-	fmt.Println(reportRecordList)
+	jsons, errs := json.Marshal(reportRecordList)
+	if errs != nil {
+		fmt.Println(errs.Error())
+	}
+	logs.Info(string(jsons))
+	req := this.Ctx.Request
+	addr := req.RemoteAddr
+	//fmt.Println(reportRecordList)
 	const base_format = "2006-01-02 15:04:05"
 	peerId := ""
 	for _, v := range reportRecordList.Records {
@@ -78,16 +86,17 @@ func (this *PeerController) Report() {
 		p.Mac = v.CommonData["mac"]
 		p.PeerId = v.CommonData["peer_id"]
 		peerId = p.PeerId
+		logs.Info("{ip:%s,pid:%s}", addr, peerId)
 		p.CreateTime, _ = time.Parse(base_format, v.CommonData["timestr"])
 		//fmt.Println(p)
-		err := service.PeerLogService.AddPeerLog(p)
-		if err != nil {
-			out := make(map[string]interface{})
-			out["status"] = "-1"
-			out["msg"] = "error"
-			this.jsonResult(out)
-			return
-		}
+		//		err := service.PeerLogService.AddPeerLog(p)
+		//		if err != nil {
+		//			out := make(map[string]interface{})
+		//			out["status"] = "-1"
+		//			out["msg"] = "error"
+		//			this.jsonResult(out)
+		//			return
+		//		}
 	}
 	if peerId != "" {
 		peer := &entity.Peer{}
@@ -109,7 +118,9 @@ func (this *PeerController) Report() {
 // 发布资源
 func (this *PeerController) Pub() {
 	//下载文件
+	fmt.Println("pub~~~~~")
 	fileUrl := this.GetString("fileUrl")
+	fmt.Println(fileUrl)
 	fileName := this.GetString("fileName")
 	out := make(map[string]interface{})
 	client := &http.Client{}
@@ -139,34 +150,39 @@ func (this *PeerController) Pub() {
 		out["msg"] = "error"
 		this.jsonResult(out)
 	}
-	io.Copy(f, response.Body)
-	defer response.Body.Close()
-	defer f.Close()
-	defer cancel()
 
-	// 发布资源
-	p := &entity.Resource{}
-	p.Name = fileName
-	p.Domain = ""
-	p.MD5 = ""
-	p.Version = ""
-	p.RepoUrl = fileUrl
-	p.TaskReview = 0
-	err = service.ResourceService.AddResource(p)
+	go func() {
+		io.Copy(f, response.Body)
+		fmt.Println("download ok~~~")
+		defer response.Body.Close()
+		defer f.Close()
+		defer cancel()
 
-	//构建任务
-	task := new(entity.Task)
-	task.ResourceId = p.Id
-	task.Message = ""
-	task.UserId = this.userId
-	task.UserName = this.auth.GetUser().UserName
-	task.FileName = p.Name
-	task.PubEnvId = 1
-	task.BuildStatus = 1
+		// 发布资源
+		p := &entity.Resource{}
+		p.Name = fileName
+		p.Domain = ""
+		p.MD5 = ""
+		p.Version = ""
+		p.RepoUrl = fileUrl
+		p.TaskReview = 0
+		err = service.ResourceService.AddResource(p)
 
-	err = service.TaskService.AddTask(task)
-	service.ActionService.Add("create_task", this.auth.GetUserName(), "task", task.Id, "")
-	service.DeployService.DoDeploy(task)
+		//构建任务
+		task := new(entity.Task)
+		task.ResourceId = p.Id
+		task.Message = ""
+		task.UserId = 1
+		task.UserName = "admin"
+		task.FileName = p.Name
+		task.PubEnvId = 1
+		task.BuildStatus = 1
+
+		err = service.TaskService.AddTask(task)
+		service.ActionService.Add("create_task", this.auth.GetUserName(), "task", task.Id, "")
+		service.DeployService.DoDeploy(task)
+	}()
+
 	out["status"] = "1"
 	out["msg"] = "ok"
 	this.jsonResult(out)
