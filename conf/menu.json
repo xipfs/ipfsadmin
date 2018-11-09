@@ -20,6 +20,10 @@
 				"name": "新建发布",
 				"route": "task.publish",
 				"action": "TaskController.Publish"
+			},{
+				"name": "发布状态",
+				"route": "task.list",
+				"action": "TaskController.List"
 			}
 		]
 	}, 

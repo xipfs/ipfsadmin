@@ -49,42 +49,47 @@ type Url struct {
 
 // 列表
 func (this *TaskController) List() {
-	status, _ := this.GetInt("status")
+	//status, _ := this.GetInt("status")
 	page, _ := this.GetInt("page")
-	startDate := this.GetString("start_date")
-	endDate := this.GetString("end_date")
-	resourceId, _ := this.GetInt("resource_id")
-	if page < 1 {
-		page = 1
-	}
-	filter := make([]interface{}, 0, 6)
-	if resourceId > 0 {
-		filter = append(filter, "resource_id", resourceId)
-	}
-	if startDate != "" {
-		filter = append(filter, "start_date", startDate)
-	}
-	if endDate != "" {
-		filter = append(filter, "end_date", endDate)
-	}
-	if status == 1 {
-		filter = append(filter, "pub_status", 3)
-	} else {
-		filter = append(filter, "pub_status__lt", 3)
-	}
-
-	list, count := service.TaskService.GetList(page, this.pageSize, filter...)
-	resourceList, _ := service.ResourceService.GetAllResource()
-
-	this.Data["pageTitle"] = "发布单列表"
-	this.Data["status"] = status
+	list, count := service.ActionService.GetList(page, 10)
+	this.Data["pageTitle"] = "状态列表"
 	this.Data["count"] = count
+	this.Data["pageBar"] = libs.NewPager(page, int(count), this.pageSize, beego.URLFor("TaskController.List"), true).ToString()
 	this.Data["list"] = list
-	this.Data["resourceList"] = resourceList
-	this.Data["pageBar"] = libs.NewPager(page, int(count), this.pageSize, beego.URLFor("TaskController.List", "status", status, "resource_id", resourceId, "start_date", startDate, "end_date", endDate), true).ToString()
-	this.Data["resourceId"] = resourceId
-	this.Data["startDate"] = startDate
-	this.Data["endDate"] = endDate
+	//	startDate := this.GetString("start_date")
+	//	endDate := this.GetString("end_date")
+	//	resourceId, _ := this.GetInt("resource_id")
+	//	if page < 1 {
+	//		page = 1
+	//	}
+	//	filter := make([]interface{}, 0, 6)
+	//	if resourceId > 0 {
+	//		filter = append(filter, "resource_id", resourceId)
+	//	}
+	//	if startDate != "" {
+	//		filter = append(filter, "start_date", startDate)
+	//	}
+	//	if endDate != "" {
+	//		filter = append(filter, "end_date", endDate)
+	//	}
+	//	if status == 1 {
+	//		filter = append(filter, "pub_status", 3)
+	//	} else {
+	//		filter = append(filter, "pub_status__lt", 3)
+	//	}
+
+	//	list, count := service.TaskService.GetList(page, this.pageSize, filter...)
+	//	resourceList, _ := service.ResourceService.GetAllResource()
+
+	//	this.Data["pageTitle"] = "发布单列表"
+	//	this.Data["status"] = status
+	//	this.Data["count"] = count
+	//	this.Data["list"] = list
+	//	this.Data["resourceList"] = resourceList
+	//	this.Data["pageBar"] = libs.NewPager(page, int(count), this.pageSize, beego.URLFor("TaskController.List", "status", status, "resource_id", resourceId, "start_date", startDate, "end_date", endDate), true).ToString()
+	//	this.Data["resourceId"] = resourceId
+	//	this.Data["startDate"] = startDate
+	//	this.Data["endDate"] = endDate
 	this.display()
 }
 
@@ -237,10 +242,12 @@ func (this *TaskController) Publish() {
 		//保存文件到指定的位置
 		//static/uploadfile,这个是文件的地址，第一个static前面不要有/
 		this.SaveToFile("file", path.Join(beego.AppConfig.String("pub_dir"), fileName))
+		service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, "上传下载列表成功 ！")
 		go func() {
 			fi, err := os.Open(path.Join(beego.AppConfig.String("pub_dir"), fileName))
 			if err != nil {
 				fmt.Printf("Error: %s\n", err)
+				service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, "保存地址文件失败 ！")
 				return
 			}
 			defer fi.Close()
@@ -255,16 +262,19 @@ func (this *TaskController) Publish() {
 				resp, err := http.Get("http://ams.lenovomm.com/ams/3.0/appdownaddress.do?dt=0&ty=2&pn=" + string(a) + "&cid=12654&tcid=12654&ic=0")
 				if err != nil {
 					fmt.Printf("Error: %s\n", err)
+					service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, "获取 apk 下载地址失败 ！")
 					return
 				}
 				defer resp.Body.Close()
 				body, err := ioutil.ReadAll(resp.Body)
 				if err != nil {
 					fmt.Printf("Error: %s\n", err)
+					service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, "获取 apk 下载地址失败 ！")
 					return
 				}
 				fmt.Println(string(body))
 				//json str 转struct
+				service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, "获取 apk 地址成功 ！")
 				var app App
 				if err := json.Unmarshal(body, &app); err == nil {
 					fmt.Println("================json str 转struct==")
@@ -294,9 +304,9 @@ func pub(fileName string, fileUrl string, domain string, uploadFileName string) 
 	//下载文件
 	client := &http.Client{}
 	reqest, err := http.NewRequest("GET", fileUrl, nil)
-
 	if err != nil {
 		fmt.Println(err)
+		service.ActionService.Add("publish", "admin", "publish", 1000, "下载 APK 失败 ！")
 		return
 	}
 	ctx, cancel := context.WithCancel(context.Background())
@@ -304,19 +314,26 @@ func pub(fileName string, fileUrl string, domain string, uploadFileName string) 
 	response, err := client.Do(reqest)
 	if err != nil {
 		fmt.Println("Fatal error ", err.Error())
+		service.ActionService.Add("publish", "admin", "publish", 1000, "下载 APK 失败 ！")
 		return
 	}
 	f, err := os.Create(beego.AppConfig.String("pub_dir") + fileName)
 	if err != nil {
 		fmt.Println(err)
+		service.ActionService.Add("publish", "admin", "publish", 1000, "下载 APK 失败 ！")
 		return
 	}
 	go func() {
-		io.Copy(f, response.Body)
-		fmt.Println("download ok~~~")
+		_, err := io.Copy(f, response.Body)
 		defer response.Body.Close()
 		defer f.Close()
 		defer cancel()
+		if err != nil {
+			service.ActionService.Add("publish", "admin", "publish", 1000, "下载 APK 失败 ！")
+			return
+		}
+		service.ActionService.Add("publish", "admin", "publish", 1000, "下载 APK 成功 ！")
+		fmt.Println("download ok~~~")
 
 		// 发布资源
 		p := &entity.Resource{}

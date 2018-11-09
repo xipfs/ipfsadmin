@@ -44,6 +44,7 @@ func (this *deployService) DeployTask(taskId int) error {
 
 func (this *deployService) DoDeploy(task *entity.Task) {
 	// 1. 添加到本地库
+	resource, err := ResourceService.GetResource(task.ResourceId)
 	out, stderr, err := libs.ExecCmdDir(beego.AppConfig.String("pub_dir"), "ipfs", "add", "-w", task.FileName)
 	fmt.Println("out", out)
 	fmt.Println("stderr", stderr)
@@ -52,11 +53,14 @@ func (this *deployService) DoDeploy(task *entity.Task) {
 		task.ErrorMsg = fmt.Sprintf("添加到本地节点失败：%v", err)
 		task.PubStatus = -2
 		TaskService.UpdateTask(task, "PubStatus", "ErrorMsg")
+		resource.Status = -1
+		ResourceService.UpdateResource(resource, "Status")
 		return
 	}
+	ActionService.Add("publish", "admin", "publish", 1000, "添加 APK 到本地成功 ！")
 	words := strings.Split(string(out[:]), " ")
 	hash := words[1]
-	resource, err := ResourceService.GetResource(task.ResourceId)
+
 	if err != nil {
 		task.ErrorMsg = fmt.Sprintf("获取资源失败：%v", err)
 		task.PubStatus = -2
@@ -65,7 +69,8 @@ func (this *deployService) DoDeploy(task *entity.Task) {
 	}
 	fmt.Println(hash)
 	resource.Hash = hash
-	ResourceService.UpdateResource(resource, "Hash")
+	resource.Status = 2
+	ResourceService.UpdateResource(resource, "Hash", "Status")
 	// 2. 发布到服务器
 	env, _ := EnvService.GetEnv(task.PubEnvId)
 	num := len(env.ServerList)
@@ -89,6 +94,9 @@ func (this *deployService) DoDeploy(task *entity.Task) {
 		task.PubStatus = 3
 		task.ErrorMsg = ""
 		TaskService.UpdateTask(task, "PubTime", "PubLog", "PubStatus", "ErrorMsg")
+		resource.Status = 3
+		ResourceService.UpdateResource(resource, "Status")
+		ActionService.Add("publish", "admin", "publish", 1000, "添加 APK 到服务器 ！")
 	} else {
 		task.PubStatus = -3
 		TaskService.UpdateTask(task, "PubTime", "PubLog", "PubStatus", "ErrorMsg")

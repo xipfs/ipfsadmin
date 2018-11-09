@@ -52,15 +52,21 @@ func (this *actionService) UpdateProfile(userName string, userId int) {
 }
 
 // 获取动态列表
-func (this *actionService) GetList(page, pageSize int) ([]entity.Action, error) {
-	var list []entity.Action
-	num, err := o.QueryTable(this.table()).OrderBy("-create_time").Offset((page - 1) * pageSize).Limit(pageSize).All(&list)
+func (this *actionService) GetList(page, pageSize int) ([]entity.Action, int64) {
+	var (
+		list  []entity.Action
+		count int64
+	)
+	query := o.QueryTable(this.table())
+	count, _ = query.Count()
+	num, err := query.OrderBy("-create_time").Offset((page - 1) * pageSize).Limit(pageSize).All(&list)
 	if num > 0 && err == nil {
 		for i := 0; i < int(num); i++ {
 			this.format(&list[i])
 		}
 	}
-	return list, err
+	return list, count
+
 }
 
 // 格式化

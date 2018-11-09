@@ -26,7 +26,12 @@
 							<td>{{$v.UploadFileName}}</td>
 							<td>{{$v.Domain}}</td>
 							<td>{{$v.Hash}}</td>
-							<td>{{$v.Status}}</td>
+							<td>
+								{{if eq $v.Status -1}}<b class="red">本地发布失败</b>{{end}}
+								{{if eq $v.Status 1}}<b class="green">发布中</b>{{end}}
+								{{if eq $v.Status 2}}<b class="green">本地成功</b>{{end}}
+								{{if eq $v.Status 3}}<b class="green">全部成功</b>{{end}}
+							</td>
 							<td>
 							<a href="{{urlfor "ResourceController.Del" "id" $v.Id}}" class="delete_confirm">删除资源</a>
 							</td>
