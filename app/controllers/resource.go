@@ -149,7 +149,7 @@ func (this *ResourceController) Download() {
 	m := make(map[string]string)
 	for _, v := range uploadFileNames {
 		m["pn"] = v.Domain
-		m["hash"] = v.Hash
+		m["downurl"] = "http://127.0.0.1:8080/ipfs/" + v.Hash + "?channel=lestore&ftype=apk"
 	}
 	str, _ := json.Marshal(m)
 	fmt.Println(string(str))
