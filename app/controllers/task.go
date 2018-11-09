@@ -12,7 +12,15 @@ package controllers
 */
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"path"
+	"strings"
 
 	"github.com/astaxie/beego"
 	"github.com/xipfs/ipfsadmin/app/entity"
@@ -22,6 +30,19 @@ import (
 
 type TaskController struct {
 	BaseController
+}
+
+type App struct {
+	Version     string `json:"app_version"`
+	VersionName string `json:"app_versionname"`
+	MD5         string `json:"MD5"`
+	downurls    string `json:"MD5"`
+	Urls        []Url  `json:"downurls"`
+}
+
+type Url struct {
+	DownUrl string `json:"downurl"`
+	AppSize int32  `json:"appSize"`
 }
 
 // 列表
@@ -163,41 +184,6 @@ func (this *TaskController) GetStatus() {
 	this.jsonResult(out)
 }
 
-// 发布
-func (this *TaskController) Publish() {
-	taskId, _ := this.GetInt("id")
-	step, _ := this.GetInt("step")
-	if step < 1 {
-		step = 1
-	}
-	task, err := service.TaskService.GetTask(taskId)
-	this.checkError(err)
-
-	if task.BuildStatus != 1 {
-		this.showMsg("该任务单尚未构建成功！", MSG_ERR)
-	}
-
-	if task.PubStatus != 0 {
-		step = 2
-	}
-	if task.PubStatus == 3 {
-		step = 3
-	}
-	fmt.Println("PubEnvId", task.PubEnvId)
-	serverList, err := service.EnvService.GetEnvServers(task.PubEnvId)
-	fmt.Println("ServerList", serverList)
-	this.checkError(err)
-	env, err := service.EnvService.GetEnv(task.PubEnvId)
-	this.checkError(err)
-
-	this.Data["serverList"] = serverList
-	this.Data["task"] = task
-	this.Data["env"] = env
-	this.Data["pageTitle"] = "发布"
-
-	this.display(fmt.Sprintf("task/publish-step%d", step))
-}
-
 // 开始发布
 func (this *TaskController) StartPub() {
 	taskId, _ := this.GetInt("id")
@@ -227,4 +213,68 @@ func (this *TaskController) Del() {
 	} else {
 		this.redirect(beego.URLFor("TaskController.List"))
 	}
+}
+
+// 新建发布任务
+func (this *TaskController) Publish() {
+	if this.isPost() {
+		//image，这是一个key值，对应的是html中input type-‘file’的name属性值
+		f, h, _ := this.GetFile("file")
+		//得到文件的名称
+		fileName := h.Filename
+		arr := strings.Split(fileName, ":")
+		if len(arr) > 1 {
+			index := len(arr) - 1
+			fileName = arr[index]
+		}
+		fmt.Println("文件名称:")
+		fmt.Println(fileName)
+		//关闭上传的文件，不然的话会出现临时文件不能清除的情况
+		f.Close()
+		//保存文件到指定的位置
+		//static/uploadfile,这个是文件的地址，第一个static前面不要有/
+		this.SaveToFile("file", path.Join(beego.AppConfig.String("pub_dir"), fileName))
+		go func() {
+			fi, err := os.Open(path.Join(beego.AppConfig.String("pub_dir"), fileName))
+			if err != nil {
+				fmt.Printf("Error: %s\n", err)
+				return
+			}
+			defer fi.Close()
+			br := bufio.NewReader(fi)
+			m := make(map[string]string)
+			for {
+				a, _, c := br.ReadLine()
+				if c == io.EOF {
+					break
+				}
+				fmt.Println(string(a))
+				resp, err := http.Get("http://ams.lenovomm.com/ams/3.0/appdownaddress.do?dt=0&ty=2&pn=" + string(a) + "&cid=12654&tcid=12654&ic=0")
+				if err != nil {
+				}
+				defer resp.Body.Close()
+				body, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+				}
+				fmt.Println(string(body))
+				//json str 转struct
+				var app App
+				if err := json.Unmarshal(body, &app); err == nil {
+					fmt.Println("================json str 转struct==")
+					fmt.Println(app)
+					fmt.Println(app.MD5)
+					for _, v := range app.Urls {
+						m[string(a)] = v.DownUrl
+						break
+					}
+
+				}
+			}
+		}()
+		this.redirect(beego.URLFor("TaskController.List"))
+	} else {
+		this.Data["pageTitle"] = "新建发布任务"
+		this.display("task/publish")
+	}
+
 }

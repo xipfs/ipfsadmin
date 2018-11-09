@@ -1,0 +1,31 @@
+
+<form class="form-horizontal" enctype="multipart/form-data" method="post" action="{{urlfor "TaskController.Publish"}}">
+	<div class="form-group">
+		<label class="col-sm-2 control-label">选择资源</label>
+		<div class="col-sm-3">
+			 <input type="file" id="id-input-file" name="file"/>
+		</div>
+	</div>
+	
+	<div class="hr hr-18 dotted"></div>
+
+	<div class="form-group">
+		<div class="col-sm-offset-2 col-sm-10">
+			<button class="btn btn-success btn-next">
+				上传
+			<i class="ace-icon fa fa-arrow-right icon-on-right"></i>
+			</button>
+		</div>
+	</div>
+	<div class="form-group row" id="fileDiv">
+         <input name="fileName" type="hidden" >
+         <input name="fileUrl" type="hidden">
+         <input name="fileSize" type="hidden">
+    </div>
+</form>
+
+<script>
+$(function() {
+
+});
+</script>

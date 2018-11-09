@@ -24,12 +24,7 @@ type ConfigController struct {
 
 //DownloadConfig 下载配置
 type DownloadConfig struct {
-	ChannelDownloadConfig map[string]ChannelDownloadConfig
-}
-
-//ChannelDownloadConfig 渠道下载配置
-type ChannelDownloadConfig struct {
-	DownloadHeader map[string]string
+	DownloadHeader map[string]map[string]string
 }
 
 type ConfigJson struct {

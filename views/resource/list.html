@@ -1,12 +1,10 @@
 
 		<div class="row">
 			<div class="col-xs-12">
-			<a href="{{urlfor "ResourceController.Add"}}" class="btn btn-sm btn-default"><i class="fa fa-plus"></i> 添加资源</a>
+			<a href="{{urlfor "ResourceController.Add"}}" class="btn btn-sm btn-default"><i class="fa fa-plus"></i>添加资源</a>
 			</div>
 		</div>
-
 		<div class="space-4"></div>
-
 		<div class="row">
 			<div class="col-xs-12">
 				<table class="table table-striped table-bordered table-hover">
@@ -15,7 +13,7 @@
 						<th>ID</th>
 						<th>资源名称</th>
 						<th>Hash</th>
-						<th>最后发布版本</th>
+						<th>状态</th>
 						<th>MD5</th>
 						<th>操作</th>
 					</tr>
@@ -26,11 +24,9 @@
 							<td class="center">{{$v.Id}}</td>
 							<td>{{$v.Name}}</td>
 							<td>{{$v.Hash}}</td>
-							<td>{{$v.Version}}</td>
+							<td>{{$v.Status}}</td>
 							<td>{{$v.MD5}}</td>
 							<td>
-							<a href="{{urlfor "EnvController.List" "resource_id" $v.Id}}">发布环境</a> | 
-							<a href="{{urlfor "ResourceController.Edit" "id" $v.Id}}">修改资源</a> |
 							<a href="{{urlfor "ResourceController.Del" "id" $v.Id}}" class="delete_confirm">删除资源</a>
 							</td>
 						</tr>

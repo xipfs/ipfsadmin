@@ -17,14 +17,9 @@
 		"route": "#",
 		"submenu": [
 			{
-				"name": "新建发布单",
-				"route": "task.create",
-				"action": "TaskController.Create"
-			},
-			{
-				"name": "发布单列表",
-				"route": "task.list",
-				"action": "TaskController.List"
+				"name": "新建发布",
+				"route": "task.publish",
+				"action": "TaskController.Publish"
 			}
 		]
 	}, 
