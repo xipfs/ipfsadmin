@@ -242,12 +242,12 @@ func (this *TaskController) Publish() {
 		//保存文件到指定的位置
 		//static/uploadfile,这个是文件的地址，第一个static前面不要有/
 		this.SaveToFile("file", path.Join(beego.AppConfig.String("pub_dir"), fileName))
-		service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, "上传下载列表成功 ！")
+		service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, uploadFileName+" 上传下载列表成功 ！")
 		go func() {
 			fi, err := os.Open(path.Join(beego.AppConfig.String("pub_dir"), fileName))
 			if err != nil {
 				fmt.Printf("Error: %s\n", err)
-				service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, "保存地址文件失败 ！")
+				service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, uploadFileName+" 保存地址文件失败 ！")
 				return
 			}
 			defer fi.Close()
@@ -262,19 +262,19 @@ func (this *TaskController) Publish() {
 				resp, err := http.Get("http://ams.lenovomm.com/ams/3.0/appdownaddress.do?dt=0&ty=2&pn=" + string(a) + "&cid=12654&tcid=12654&ic=0")
 				if err != nil {
 					fmt.Printf("Error: %s\n", err)
-					service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, "获取 apk 下载地址失败 ！")
+					service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, uploadFileName+" 获取 apk 下载地址失败 ！")
 					return
 				}
 				defer resp.Body.Close()
 				body, err := ioutil.ReadAll(resp.Body)
 				if err != nil {
 					fmt.Printf("Error: %s\n", err)
-					service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, "获取 apk 下载地址失败 ！")
+					service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, uploadFileName+" 获取 apk 下载地址失败 ！")
 					return
 				}
 				fmt.Println(string(body))
 				//json str 转struct
-				service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, "获取 apk 地址成功 ！")
+				service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, uploadFileName+" 获取 apk 地址成功 ！")
 				var app App
 				if err := json.Unmarshal(body, &app); err == nil {
 					fmt.Println("================json str 转struct==")
@@ -285,10 +285,11 @@ func (this *TaskController) Publish() {
 						break
 					}
 				}
-				for _, v := range m {
-					name := strings.Split(filepath.Base(v), "?")[0]
-					pub(name, v, string(a), uploadFileName)
-				}
+			}
+			fmt.Println(m)
+			for k, v := range m {
+				name := strings.Split(filepath.Base(v), "?")[0]
+				pub(name, v, k, uploadFileName)
 			}
 		}()
 		this.redirect(beego.URLFor("TaskController.List"))
@@ -306,7 +307,7 @@ func pub(fileName string, fileUrl string, domain string, uploadFileName string) 
 	reqest, err := http.NewRequest("GET", fileUrl, nil)
 	if err != nil {
 		fmt.Println(err)
-		service.ActionService.Add("publish", "admin", "publish", 1000, "下载 APK 失败 ！")
+		service.ActionService.Add("publish", "admin", "publish", 1000, uploadFileName+" 下载 APK "+fileName+" 失败 ！")
 		return
 	}
 	ctx, cancel := context.WithCancel(context.Background())
@@ -314,52 +315,51 @@ func pub(fileName string, fileUrl string, domain string, uploadFileName string) 
 	response, err := client.Do(reqest)
 	if err != nil {
 		fmt.Println("Fatal error ", err.Error())
-		service.ActionService.Add("publish", "admin", "publish", 1000, "下载 APK 失败 ！")
+		service.ActionService.Add("publish", "admin", "publish", 1000, uploadFileName+" 下载 APK "+fileName+" 失败 ！")
 		return
 	}
 	f, err := os.Create(beego.AppConfig.String("pub_dir") + fileName)
 	if err != nil {
 		fmt.Println(err)
-		service.ActionService.Add("publish", "admin", "publish", 1000, "下载 APK 失败 ！")
+		service.ActionService.Add("publish", "admin", "publish", 1000, uploadFileName+" 下载 APK "+fileName+" 失败 ！")
 		return
 	}
-	go func() {
-		_, err := io.Copy(f, response.Body)
-		defer response.Body.Close()
-		defer f.Close()
-		defer cancel()
-		if err != nil {
-			service.ActionService.Add("publish", "admin", "publish", 1000, "下载 APK 失败 ！")
-			return
-		}
-		service.ActionService.Add("publish", "admin", "publish", 1000, "下载 APK 成功 ！")
-		fmt.Println("download ok~~~")
+	n, err := io.Copy(f, response.Body)
+	fmt.Printf("\n write %d err %v \n", n, err)
+	defer response.Body.Close()
+	defer f.Close()
+	defer cancel()
+	if err != nil {
+		service.ActionService.Add("publish", "admin", "publish", 1000, uploadFileName+" 下载 APK "+fileName+"失败 ！")
+		return
+	}
+	service.ActionService.Add("publish", "admin", "publish", 1000, uploadFileName+" 下载 APK "+fileName+"成功 ！")
+	fmt.Println("download ok~~~")
 
-		// 发布资源
-		p := &entity.Resource{}
-		p.Name = fileName
-		p.Domain = domain
-		p.MD5 = ""
-		p.Version = ""
-		p.RepoUrl = ""
-		p.TaskReview = 0
-		p.Status = 1
-		p.UploadFileName = uploadFileName
-		err = service.ResourceService.AddResource(p)
+	// 发布资源
+	p := &entity.Resource{}
+	p.Name = fileName
+	p.Domain = domain
+	p.MD5 = ""
+	p.Version = ""
+	p.RepoUrl = ""
+	p.TaskReview = 0
+	p.Status = 1
+	p.UploadFileName = uploadFileName
+	err = service.ResourceService.AddResource(p)
 
-		//构建任务
-		task := new(entity.Task)
-		task.ResourceId = p.Id
-		task.Message = ""
-		task.UserId = 1
-		task.UserName = "admin"
-		task.FileName = p.Name
-		task.PubEnvId = 1
-		task.BuildStatus = 1
-		task.UploadFileName = uploadFileName
+	//构建任务
+	task := new(entity.Task)
+	task.ResourceId = p.Id
+	task.Message = ""
+	task.UserId = 1
+	task.UserName = "admin"
+	task.FileName = p.Name
+	task.PubEnvId = 1
+	task.BuildStatus = 1
+	task.UploadFileName = uploadFileName
 
-		err = service.TaskService.AddTask(task)
-		service.ActionService.Add("create_task", "admin", "task", task.Id, "")
-		service.DeployService.DoDeploy(task)
-	}()
+	err = service.TaskService.AddTask(task)
+	service.ActionService.Add("create_task", "admin", "task", task.Id, uploadFileName+" 开始部署 apk"+fileName)
+	service.DeployService.DoDeploy(task)
 }

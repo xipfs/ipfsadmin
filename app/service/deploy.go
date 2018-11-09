@@ -50,14 +50,14 @@ func (this *deployService) DoDeploy(task *entity.Task) {
 	fmt.Println("stderr", stderr)
 	fmt.Println("err", err)
 	if err != nil {
-		task.ErrorMsg = fmt.Sprintf("添加到本地节点失败：%v", err)
+		task.ErrorMsg = fmt.Sprintf(task.UploadFileName+" 添加到本地节点失败：%v", err)
 		task.PubStatus = -2
 		TaskService.UpdateTask(task, "PubStatus", "ErrorMsg")
 		resource.Status = -1
 		ResourceService.UpdateResource(resource, "Status")
 		return
 	}
-	ActionService.Add("publish", "admin", "publish", 1000, "添加 APK 到本地成功 ！")
+	ActionService.Add("publish", "admin", "publish", 1000, task.UploadFileName+" 添加 APK 到本地成功 ！")
 	words := strings.Split(string(out[:]), " ")
 	hash := words[1]
 
@@ -96,7 +96,7 @@ func (this *deployService) DoDeploy(task *entity.Task) {
 		TaskService.UpdateTask(task, "PubTime", "PubLog", "PubStatus", "ErrorMsg")
 		resource.Status = 3
 		ResourceService.UpdateResource(resource, "Status")
-		ActionService.Add("publish", "admin", "publish", 1000, "添加 APK 到服务器 ！")
+		ActionService.Add("publish", "admin", "publish", 1000, task.UploadFileName+"添加 APK 到服务器成功！")
 	} else {
 		task.PubStatus = -3
 		TaskService.UpdateTask(task, "PubTime", "PubLog", "PubStatus", "ErrorMsg")

@@ -149,8 +149,7 @@ func (this *ResourceController) Download() {
 	uploadFileNames, _ := service.ResourceService.GetAllResourceByName(uploadFileName)
 	m := make(map[string]string)
 	for _, v := range uploadFileNames {
-		m["pn"] = v.Domain
-		m["downurl"] = "http://127.0.0.1:8080/ipfs/" + v.Hash + "?channel=lestore&ftype=apk"
+		m[v.Domain] = "http://127.0.0.1:8080/ipfs/" + v.Hash + "?channel=lestore&ftype=apk"
 	}
 	data, _ := json.Marshal(m)
 	data = bytes.Replace(data, []byte("\\u0026"), []byte("&"), -1)
