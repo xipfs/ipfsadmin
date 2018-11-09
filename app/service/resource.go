@@ -28,6 +28,16 @@ func (this *resourceService) GetAllResource() ([]entity.Resource, error) {
 	return this.GetList(1, -1)
 }
 
+// 根据标志获取资源
+func (this *resourceService) GetAllResourceByName(uploadFileName string) ([]entity.Resource, error) {
+	var list []entity.Resource
+	offset := 0
+	pageSize := 100000
+
+	_, err := o.QueryTable(this.table()).Filter("UploadFileName", uploadFileName).Offset(offset).Limit(pageSize).All(&list)
+	return list, err
+}
+
 // 获取资源列表
 func (this *resourceService) GetList(page, pageSize int) ([]entity.Resource, error) {
 	var list []entity.Resource

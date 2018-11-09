@@ -13,6 +13,7 @@ package controllers
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -20,6 +21,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/astaxie/beego"
@@ -218,8 +220,9 @@ func (this *TaskController) Del() {
 // 新建发布任务
 func (this *TaskController) Publish() {
 	if this.isPost() {
-		//image，这是一个key值，对应的是html中input type-‘file’的name属性值
+		//image，这是一个key值，对应的是html中input type=‘file’的name属性值
 		f, h, _ := this.GetFile("file")
+		uploadFileName := this.GetString("uploadFileName")
 		//得到文件的名称
 		fileName := h.Filename
 		arr := strings.Split(fileName, ":")
@@ -251,10 +254,14 @@ func (this *TaskController) Publish() {
 				fmt.Println(string(a))
 				resp, err := http.Get("http://ams.lenovomm.com/ams/3.0/appdownaddress.do?dt=0&ty=2&pn=" + string(a) + "&cid=12654&tcid=12654&ic=0")
 				if err != nil {
+					fmt.Printf("Error: %s\n", err)
+					return
 				}
 				defer resp.Body.Close()
 				body, err := ioutil.ReadAll(resp.Body)
 				if err != nil {
+					fmt.Printf("Error: %s\n", err)
+					return
 				}
 				fmt.Println(string(body))
 				//json str 转struct
@@ -267,7 +274,10 @@ func (this *TaskController) Publish() {
 						m[string(a)] = v.DownUrl
 						break
 					}
-
+				}
+				for _, v := range m {
+					name := strings.Split(filepath.Base(v), "?")[0]
+					pub(name, v, string(a), uploadFileName)
 				}
 			}
 		}()
@@ -277,4 +287,62 @@ func (this *TaskController) Publish() {
 		this.display("task/publish")
 	}
 
+}
+
+// 发布资源
+func pub(fileName string, fileUrl string, domain string, uploadFileName string) {
+	//下载文件
+	client := &http.Client{}
+	reqest, err := http.NewRequest("GET", fileUrl, nil)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	reqest = reqest.WithContext(ctx)
+	response, err := client.Do(reqest)
+	if err != nil {
+		fmt.Println("Fatal error ", err.Error())
+		return
+	}
+	f, err := os.Create(beego.AppConfig.String("pub_dir") + fileName)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	go func() {
+		io.Copy(f, response.Body)
+		fmt.Println("download ok~~~")
+		defer response.Body.Close()
+		defer f.Close()
+		defer cancel()
+
+		// 发布资源
+		p := &entity.Resource{}
+		p.Name = fileName
+		p.Domain = domain
+		p.MD5 = ""
+		p.Version = ""
+		p.RepoUrl = fileUrl
+		p.TaskReview = 0
+		p.Status = 1
+		p.UploadFileName = uploadFileName
+		err = service.ResourceService.AddResource(p)
+
+		//构建任务
+		task := new(entity.Task)
+		task.ResourceId = p.Id
+		task.Message = ""
+		task.UserId = 1
+		task.UserName = "admin"
+		task.FileName = p.Name
+		task.PubEnvId = 1
+		task.BuildStatus = 1
+		task.UploadFileName = uploadFileName
+
+		err = service.TaskService.AddTask(task)
+		service.ActionService.Add("create_task", "admin", "task", task.Id, "")
+		service.DeployService.DoDeploy(task)
+	}()
 }

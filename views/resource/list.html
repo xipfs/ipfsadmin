@@ -1,7 +1,8 @@
 
 		<div class="row">
 			<div class="col-xs-12">
-			<a href="{{urlfor "ResourceController.Add"}}" class="btn btn-sm btn-default"><i class="fa fa-plus"></i>添加资源</a>
+				<input type="text" id="uploadFileName" name="uploadFileName" />
+				<input type="button" class="btn btn-sm btn-default" id="downBtn" value="下载" />
 			</div>
 		</div>
 		<div class="space-4"></div>
@@ -11,10 +12,10 @@
 					<thead>
 					<tr>
 						<th>ID</th>
-						<th>资源名称</th>
+						<th>标识符</th>
+						<th>包名</th>
 						<th>Hash</th>
 						<th>状态</th>
-						<th>MD5</th>
 						<th>操作</th>
 					</tr>
 					</thead>
@@ -22,10 +23,10 @@
 					{{range $k, $v := .list}}
 						<tr>
 							<td class="center">{{$v.Id}}</td>
-							<td>{{$v.Name}}</td>
+							<td>{{$v.UploadFileName}}</td>
+							<td>{{$v.Domain}}</td>
 							<td>{{$v.Hash}}</td>
 							<td>{{$v.Status}}</td>
-							<td>{{$v.MD5}}</td>
 							<td>
 							<a href="{{urlfor "ResourceController.Del" "id" $v.Id}}" class="delete_confirm">删除资源</a>
 							</td>
@@ -45,3 +46,10 @@
 		<div class="row">
 			<div class="col-xs-12">{{str2html .pageBar}}</div>
 		</div>
+		
+<script type="text/javascript">
+$("#downBtn").click(function(){
+		var url = '/resource/download?uploadFileName=' + $("#uploadFileName").val()
+		window.open(url)	
+});
+</script>

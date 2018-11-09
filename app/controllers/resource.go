@@ -12,7 +12,10 @@ package controllers
 */
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/astaxie/beego"
@@ -137,4 +140,24 @@ func (this *ResourceController) validResource(p *entity.Resource) error {
 		return fmt.Errorf(errorMsg)
 	}
 	return nil
+}
+
+// 验证提交
+func (this *ResourceController) Download() {
+	uploadFileName := this.GetString("uploadFileName")
+	uploadFileNames, _ := service.ResourceService.GetAllResourceByName(uploadFileName)
+	m := make(map[string]string)
+	for _, v := range uploadFileNames {
+		m["pn"] = v.Domain
+		m["hash"] = v.Hash
+	}
+	str, _ := json.Marshal(m)
+	fmt.Println(string(str))
+
+	f, _ := os.Create(beego.AppConfig.String("pub_dir") + uploadFileName)
+	w := bufio.NewWriter(f)
+	w.WriteString(string(str))
+	w.Flush()
+	f.Close()
+	this.Ctx.Output.Download(beego.AppConfig.String("pub_dir")+uploadFileName, uploadFileName+".txt")
 }
