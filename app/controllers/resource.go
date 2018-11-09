@@ -13,6 +13,7 @@ package controllers
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -151,12 +152,12 @@ func (this *ResourceController) Download() {
 		m["pn"] = v.Domain
 		m["downurl"] = "http://127.0.0.1:8080/ipfs/" + v.Hash + "?channel=lestore&ftype=apk"
 	}
-	str, _ := json.Marshal(m)
-	fmt.Println(string(str))
-
+	data, _ := json.Marshal(m)
+	data = bytes.Replace(data, []byte("\\u0026"), []byte("&"), -1)
+	str := string(data)
 	f, _ := os.Create(beego.AppConfig.String("pub_dir") + uploadFileName)
 	w := bufio.NewWriter(f)
-	w.WriteString(string(str))
+	w.WriteString(str)
 	w.Flush()
 	f.Close()
 	this.Ctx.Output.Download(beego.AppConfig.String("pub_dir")+uploadFileName, uploadFileName+".txt")

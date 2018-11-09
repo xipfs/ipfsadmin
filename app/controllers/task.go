@@ -324,7 +324,7 @@ func pub(fileName string, fileUrl string, domain string, uploadFileName string) 
 		p.Domain = domain
 		p.MD5 = ""
 		p.Version = ""
-		p.RepoUrl = fileUrl
+		p.RepoUrl = ""
 		p.TaskReview = 0
 		p.Status = 1
 		p.UploadFileName = uploadFileName
