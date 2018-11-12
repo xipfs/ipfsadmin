@@ -14,6 +14,8 @@ package controllers
 import (
 	"bufio"
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -252,13 +254,14 @@ func (this *TaskController) Publish() {
 			}
 			defer fi.Close()
 			br := bufio.NewReader(fi)
-			m := make(map[string]string)
+			m := make(map[string]string)  // package name -> url
+			m2 := make(map[string]string) // package name -> md5
 			for {
 				a, _, c := br.ReadLine()
 				if c == io.EOF {
 					break
 				}
-				fmt.Println(string(a))
+				packageName := string(a)
 				resp, err := http.Get("http://ams.lenovomm.com/ams/3.0/appdownaddress.do?dt=0&ty=2&pn=" + string(a) + "&cid=12654&tcid=12654&ic=0")
 				if err != nil {
 					fmt.Printf("Error: %s\n", err)
@@ -280,16 +283,17 @@ func (this *TaskController) Publish() {
 					fmt.Println("================json str 转struct==")
 					fmt.Println(app)
 					fmt.Println(app.MD5)
+					service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, uploadFileName+" 获取 MD5 "+app.MD5+"成功 ！")
+					m2[packageName] = app.MD5
 					for _, v := range app.Urls {
-						m[string(a)] = v.DownUrl
+						m[packageName] = v.DownUrl
 						break
 					}
 				}
 			}
-			fmt.Println(m)
 			for k, v := range m {
 				name := strings.Split(filepath.Base(v), "?")[0]
-				pub(name, v, k, uploadFileName)
+				pub(name, v, k, uploadFileName, m2[k])
 			}
 		}()
 		this.redirect(beego.URLFor("TaskController.List"))
@@ -301,7 +305,7 @@ func (this *TaskController) Publish() {
 }
 
 // 发布资源
-func pub(fileName string, fileUrl string, domain string, uploadFileName string) {
+func pub(fileName string, fileUrl string, domain string, uploadFileName string, md5Original string) {
 	//下载文件
 	client := &http.Client{}
 	reqest, err := http.NewRequest("GET", fileUrl, nil)
@@ -335,6 +339,22 @@ func pub(fileName string, fileUrl string, domain string, uploadFileName string) 
 	}
 	service.ActionService.Add("publish", "admin", "publish", 1000, uploadFileName+" 下载 APK "+fileName+"成功 ！")
 	fmt.Println("download ok~~~")
+	file, inerr := os.Open(beego.AppConfig.String("pub_dir") + fileName)
+	if inerr != nil {
+		service.ActionService.Add("publish", "admin", "publish", 1000, uploadFileName+" 打开 APK "+fileName+"失败 ！")
+		return
+	}
+	md5h := md5.New()
+	io.Copy(md5h, file)
+	fileMd5 := strings.ToUpper(hex.EncodeToString(md5h.Sum([]byte(""))))
+	fmt.Println("MD5 : " + fileMd5)
+	defer file.Close()
+	if fileMd5 == md5Original {
+		service.ActionService.Add("publish", "admin", "publish", 1000, uploadFileName+" 校验 MD5 "+fileName+" 成功 ！")
+	} else {
+		service.ActionService.Add("publish", "admin", "publish", 1000, uploadFileName+" 校验 MD5 "+fileName+" 失败 ！")
+		return
+	}
 
 	// 发布资源
 	p := &entity.Resource{}
