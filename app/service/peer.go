@@ -102,22 +102,22 @@ func (this *peerService) GetPeerStat(rangeType string) map[int]int {
 		year, month, _ := time.Now().Date()
 		//startTime := fmt.Sprintf("%d-%02d-01 00:00:00", year, month)
 		endTime := fmt.Sprintf("%d-%02d-31 23:59:59", year, month)
-		sql = fmt.Sprintf("SELECT DAY(create_time) AS date, sum(peer_id) AS count FROM %s WHERE create_time < '%s' GROUP BY DAY(create_time) ORDER BY `date` ASC", this.table(), endTime)
+		sql = fmt.Sprintf("SELECT DAY(update_time) AS date, sum(peer_id) AS count FROM %s WHERE update_time < '%s' GROUP BY DAY(update_time) ORDER BY `date` ASC", this.table(), endTime)
 	case "last_month":
 		year, month, _ := time.Now().AddDate(0, -1, 0).Date()
 		//startTime := fmt.Sprintf("%d-%02d-01 00:00:00", year, month)
 		endTime := fmt.Sprintf("%d-%02d-31 23:59:59", year, month)
-		sql = fmt.Sprintf("SELECT DAY(create_time) AS date, sum(peer_id) AS count FROM %s WHERE create_time < '%s' GROUP BY DAY(create_time) ORDER BY `date` ASC", this.table(), endTime)
+		sql = fmt.Sprintf("SELECT DAY(update_time) AS date, sum(peer_id) AS count FROM %s WHERE update_time < '%s' GROUP BY DAY(update_time) ORDER BY `date` ASC", this.table(), endTime)
 	case "this_year":
 		year := time.Now().Year()
 		//startTime := fmt.Sprintf("%d-01-01 00:00:00", year)
 		endTime := fmt.Sprintf("%d-12-31 23:59:59", year)
-		sql = fmt.Sprintf("SELECT MONTH(create_time) AS date, sum(peer_id) AS count FROM %s WHERE create_time < '%s' GROUP BY MONTH(create_time) ORDER BY `date` ASC", this.table(), endTime)
+		sql = fmt.Sprintf("SELECT MONTH(update_time) AS date, sum(peer_id) AS count FROM %s WHERE update_time < '%s' GROUP BY MONTH(update_time) ORDER BY `date` ASC", this.table(), endTime)
 	case "last_year":
 		year := time.Now().Year() - 1
 		//startTime := fmt.Sprintf("%d-01-01 00:00:00", year)
 		endTime := fmt.Sprintf("%d-12-31 23:59:59", year)
-		sql = fmt.Sprintf("SELECT MONTH(create_time) AS date, sum(peer_id) AS count FROM %s WHERE create_time < '%s' GROUP BY MONTH(create_time) ORDER BY `date` ASC", this.table(), endTime)
+		sql = fmt.Sprintf("SELECT MONTH(update_time) AS date, sum(peer_id) AS count FROM %s WHERE update_time < '%s' GROUP BY MONTH(update_time) ORDER BY `date` ASC", this.table(), endTime)
 	}
 
 	num, err := o.Raw(sql).Values(&maps)
