@@ -28,9 +28,11 @@ type DownloadConfig struct {
 }
 
 type ConfigJson struct {
-	Version        string
-	DataReport     *DataReport
-	DownloadConfig *DownloadConfig
+	Version         string
+	CfgUpdatePeriod string
+	DataReport      *DataReport
+	IpfsConfig      map[string]string
+	DownloadConfig  *DownloadConfig
 }
 
 type DataReport struct {
