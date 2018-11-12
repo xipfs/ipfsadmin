@@ -58,7 +58,7 @@ func (this *peerService) GetList(page, pageSize int, filters ...interface{}) ([]
 		}
 	}
 	count, _ = query.Count()
-	query.Offset(offset).Limit(pageSize).All(&list)
+	query.OrderBy("-update_time").Offset(offset).Limit(pageSize).All(&list)
 	return list, count
 }
 
