@@ -45,7 +45,7 @@ func (this *deployService) DeployTask(taskId int) error {
 func (this *deployService) DoDeploy(task *entity.Task) {
 	// 1. 添加到本地库
 	resource, err := ResourceService.GetResource(task.ResourceId)
-	out, stderr, err := libs.ExecCmdDir(beego.AppConfig.String("pub_dir"), "ipfs", "add", "-w", task.FileName)
+	out, stderr, err := libs.ExecCmdDir(beego.AppConfig.String("pub_dir"), "baize", "add", "-w", task.FileName)
 	fmt.Println("out", out)
 	fmt.Println("stderr", stderr)
 	fmt.Println("err", err)
@@ -149,7 +149,7 @@ func (this *deployService) PubToServer(task *entity.Task, ip string, port int, u
 	defer server.Close()
 	beego.Debug("连接服务器: ", addr, ", 用户: ", user)
 	// 执行命令
-	result, err := server.RunCmd("ipfs pin add " + hash)
+	result, err := server.RunCmd("baize pin add " + hash)
 	beego.Debug("执行命令 : ipfs pin add ", hash, ", 结果: ", result)
 	tmpErrorMsg := task.ErrorMsg
 	tmpPubLog := task.PubLog
