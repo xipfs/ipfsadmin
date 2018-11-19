@@ -57,7 +57,7 @@ func (this *deployService) DoDeploy(task *entity.Task) {
 		ResourceService.UpdateResource(resource, "Status")
 		return
 	}
-	ActionService.Add("publish", "admin", "publish", 1000, task.UploadFileName+" 添加 APK 到本地成功 ！")
+	ActionService.Add("publish", "admin", "publish", 1000, task.UploadFileName+" 添加"+task.FileName+" 到本地成功 ！")
 	words := strings.Split(string(out[:]), " ")
 	hash := words[1]
 
@@ -96,7 +96,7 @@ func (this *deployService) DoDeploy(task *entity.Task) {
 		TaskService.UpdateTask(task, "PubTime", "PubLog", "PubStatus", "ErrorMsg")
 		resource.Status = 3
 		ResourceService.UpdateResource(resource, "Status")
-		ActionService.Add("publish", "admin", "publish", 1000, task.UploadFileName+"添加 APK 到服务器成功！")
+		ActionService.Add("publish", "admin", "publish", 1000, task.UploadFileName+"添加 "+task.FileName+" 到服务器成功！")
 	} else {
 		task.PubStatus = -3
 		TaskService.UpdateTask(task, "PubTime", "PubLog", "PubStatus", "ErrorMsg")
@@ -148,6 +148,7 @@ func (this *deployService) PubToServer(task *entity.Task, ip string, port int, u
 	server := libs.NewServerConn(addr, user, pwd)
 	defer server.Close()
 	beego.Debug("连接服务器: ", addr, ", 用户: ", user)
+	ActionService.Add("publish", "admin", "publish", 1000, task.UploadFileName+"添加 "+task.FileName+" 连接到服务器 "+ip+" 成功！")
 	// 执行命令
 	result, err := server.RunCmd("/usr/local/sbin/baize pin add " + hash)
 	beego.Debug("执行命令 : baize pin add ", hash, ", 结果: ", result)
@@ -158,10 +159,12 @@ func (this *deployService) PubToServer(task *entity.Task, ip string, port int, u
 		task.ErrorMsg = fmt.Sprintf("发布到 %s:%d ：%v\n", ip, port, err) + tmpErrorMsg
 		task.PubStatus = -3
 		TaskService.UpdateTask(task, "PubStatus", "ErrorMsg")
+		ActionService.Add("publish", "admin", "publish", 1000, task.UploadFileName+"发布 "+task.FileName+" 服务器 "+ip+" 失败！")
 		return
 	}
 	cnum <- 1
 	task.PubLog = fmt.Sprintf("发布到 %s:%d ：%s\n", ip, port, result) + tmpPubLog
+	ActionService.Add("publish", "admin", "publish", 1000, task.UploadFileName+"发布 "+task.FileName+" 服务器 "+ip+" 成功！")
 	TaskService.UpdateTask(task, "PubLog")
 	return
 }
