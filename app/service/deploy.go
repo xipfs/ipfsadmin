@@ -149,8 +149,8 @@ func (this *deployService) PubToServer(task *entity.Task, ip string, port int, u
 	defer server.Close()
 	beego.Debug("连接服务器: ", addr, ", 用户: ", user)
 	// 执行命令
-	result, err := server.RunCmd("baize pin add " + hash)
-	beego.Debug("执行命令 : ipfs pin add ", hash, ", 结果: ", result)
+	result, err := server.RunCmd("/usr/local/sbin/baize pin add " + hash)
+	beego.Debug("执行命令 : baize pin add ", hash, ", 结果: ", result)
 	tmpErrorMsg := task.ErrorMsg
 	tmpPubLog := task.PubLog
 	if err != nil {
