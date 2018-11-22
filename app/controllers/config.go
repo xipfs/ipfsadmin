@@ -12,6 +12,7 @@ package controllers
 */
 
 import (
+	"github.com/astaxie/beego/logs"
 	"github.com/xipfs/ipfsadmin/app/service"
 )
 
@@ -21,6 +22,11 @@ type ConfigController struct {
 
 // 获取状态
 func (this *ConfigController) Get() {
+	req := this.Ctx.Request
+	addr := req.RemoteAddr
+	peer_id := this.GetString("peer_id")
+	timestr := this.GetString("timestr")
 	config, _ := service.ConfigService.GetConfig(1)
+	logs.Info("{ip:%s,pid:%s,config:%s,timestr:%s}", addr, peer_id, config.Value, timestr)
 	this.Ctx.WriteString(config.Value)
 }
