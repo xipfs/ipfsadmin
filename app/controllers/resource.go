@@ -14,7 +14,6 @@ package controllers
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -147,16 +146,20 @@ func (this *ResourceController) validResource(p *entity.Resource) error {
 func (this *ResourceController) Download() {
 	uploadFileName := this.GetString("uploadFileName")
 	uploadFileNames, _ := service.ResourceService.GetAllResourceByName(uploadFileName)
-	m := make(map[string]string)
+	var buffer bytes.Buffer
+	buffer.WriteString("update ams_ipfs_conf set AVAILABLE='0';\r\n")
+	buffer.WriteString("commit;\r\n")
 	for _, v := range uploadFileNames {
-		m[v.Domain] = "http://127.0.0.1:8080/ipfs/" + v.Hash + "?channel=lestore&ftype=apk"
+		buffer.WriteString("insert into ams_ipfs_conf(id,pn,url) values(s_ams_ipfs_conf.nextval,'")
+		buffer.WriteString(v.Domain)
+		buffer.WriteString("','")
+		buffer.WriteString("http://127.0.0.1:8080/ipfs/" + v.Hash + "?channel=lestore&ftype=apk")
+		buffer.WriteString("'||'&'||'ftype=apk');\r\n")
 	}
-	data, _ := json.Marshal(m)
-	data = bytes.Replace(data, []byte("\\u0026"), []byte("&"), -1)
-	str := string(data)
+	buffer.WriteString("commit;\r\n")
 	f, _ := os.Create(beego.AppConfig.String("pub_dir") + uploadFileName)
 	w := bufio.NewWriter(f)
-	w.WriteString(str)
+	w.WriteString(buffer.String())
 	w.Flush()
 	f.Close()
 	this.Ctx.Output.Download(beego.AppConfig.String("pub_dir")+uploadFileName, uploadFileName+".txt")
