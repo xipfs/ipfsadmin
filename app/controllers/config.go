@@ -13,8 +13,10 @@ package controllers
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/astaxie/beego/logs"
+	"github.com/xipfs/ipfsadmin/app/entity"
 	"github.com/xipfs/ipfsadmin/app/service"
 )
 
@@ -23,8 +25,10 @@ type ConfigController struct {
 }
 
 type ConfigParam struct {
-	PeerId  string `json:"peer_id"`
-	TimeStr string `json:"timestr"`
+	PeerId        string `json:"peer_id"`
+	TimeStr       string `json:"timestr"`
+	ExtParams     string `json:"extParams"`
+	DynamicParams string `json:"dynamicParams"`
 }
 
 // 获取状态
@@ -34,7 +38,16 @@ func (this *ConfigController) Get() {
 	p := &ConfigParam{}
 	requestBody := this.GetRequestBody()
 	json.Unmarshal(requestBody, p)
-	config, _ := service.ConfigService.GetConfig(1)
+	config := &entity.Config{}
+	if strings.Contains(p.ExtParams, "android") {
+		if strings.Contains(p.DynamicParams, "WIFI") {
+			config, _ = service.ConfigService.GetConfig(1)
+		} else {
+			config, _ = service.ConfigService.GetConfig(2)
+		}
+	} else {
+		config, _ = service.ConfigService.GetConfig(1)
+	}
 	logs.Info("config_get:{ip:%s,pid:%s,config:%s,timestr:%s}", addr, p.PeerId, config.Value, p.TimeStr)
 	this.Ctx.WriteString(config.Value)
 }
