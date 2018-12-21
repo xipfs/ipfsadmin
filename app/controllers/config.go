@@ -39,8 +39,9 @@ func (this *ConfigController) Get() {
 	requestBody := this.GetRequestBody()
 	json.Unmarshal(requestBody, p)
 	config := &entity.Config{}
+
 	if strings.Contains(p.ExtParams, "android") {
-		if strings.Contains(p.DynamicParams, "WIFI") {
+		if strings.Contains(p.ExtParams, "WIFI") {
 			config, _ = service.ConfigService.GetConfig(1)
 		} else {
 			config, _ = service.ConfigService.GetConfig(2)
@@ -48,6 +49,15 @@ func (this *ConfigController) Get() {
 	} else {
 		config, _ = service.ConfigService.GetConfig(1)
 	}
+
+	if strings.Contains(p.DynamicParams, "WIFI") {
+		config, _ = service.ConfigService.GetConfig(1)
+	} else if strings.Contains(p.DynamicParams, "MOBILE") {
+		config, _ = service.ConfigService.GetConfig(2)
+	} else {
+
+	}
+
 	logs.Info("config_get:{ip:%s,pid:%s,config:%s,timestr:%s}", addr, p.PeerId, config.Value, p.TimeStr)
 	this.Ctx.WriteString(config.Value)
 }
