@@ -61,8 +61,19 @@ func (this *resourceService) GetTotal() (int64, error) {
 
 // 添加资源
 func (this *resourceService) AddResource(resource *entity.Resource) error {
-	_, err := o.Insert(resource)
-	return err
+	offset := 0
+	pageSize := 100000
+	var list []entity.Resource
+
+	_, err := o.QueryTable(this.table()).Filter("domain", resource.Domain).OrderBy("-create_time").Offset(offset).Limit(pageSize).All(&list)
+	if len(list) > 1 {
+		resource = &list[0]
+		return err
+	} else {
+		_, err := o.Insert(resource)
+		return err
+	}
+
 }
 
 // 更新资源信息
