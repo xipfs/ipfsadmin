@@ -164,3 +164,37 @@ func (this *ResourceController) Download() {
 	f.Close()
 	this.Ctx.Output.Download(beego.AppConfig.String("pub_dir")+uploadFileName, uploadFileName+".txt")
 }
+
+// 查询状态
+func (this *ResourceController) Query() {
+	uploadFileName := this.GetString("fileName")
+	uploadFileNames, _ := service.ResourceService.GetAllResourceByName(uploadFileName)
+	var buffer bytes.Buffer
+	buffer.WriteString("[")
+	length := 0
+	flag := true
+	for _, v := range uploadFileNames {
+		if v.Status == 3 {
+			length++
+			buffer.WriteString("{\"pn\":")
+			buffer.WriteString(v.Domain)
+			buffer.WriteString(",\"url\"")
+			buffer.WriteString("\"http://127.0.0.1:8080/ipfs/" + v.Hash + "?channel=lestore&ftype=apk")
+			buffer.WriteString("'||'&'||'ftype=apk'\"},")
+		} else {
+			flag = false
+		}
+
+	}
+	buffer.WriteString("]")
+	out := make(map[string]interface{})
+	if flag {
+		out["status"] = "1"
+	} else {
+		out["status"] = "-1"
+	}
+	out["length"] = length
+	out["data"] = buffer.String()
+	this.jsonResult(out)
+	return
+}
