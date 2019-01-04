@@ -28,6 +28,16 @@ type ResourceController struct {
 	BaseController
 }
 
+type Resp struct {
+	Status int    `json:"status"`
+	Length int    `json:"length"`
+	Datas  []Data `json:"data"`
+}
+type Data struct {
+	Pn  string `json:"pn"`
+	Url string `json:"url"`
+}
+
 // 资源列表
 func (this *ResourceController) List() {
 	page, _ := strconv.Atoi(this.GetString("page"))
@@ -169,32 +179,29 @@ func (this *ResourceController) Download() {
 func (this *ResourceController) Query() {
 	uploadFileName := this.GetString("fileName")
 	uploadFileNames, _ := service.ResourceService.GetAllResourceByName(uploadFileName)
-	var buffer bytes.Buffer
-	buffer.WriteString("[")
 	length := 0
 	flag := true
+	var datas [100]Data
 	for _, v := range uploadFileNames {
 		if v.Status == 3 {
+
+			datas[length].Pn = v.Domain
+			datas[length].Url = "http://127.0.0.1:8080/ipfs/" + v.Hash + "?channel=lestore&ftype=apk'||'&'||'ftype=apk"
 			length++
-			buffer.WriteString("{\"pn\":")
-			buffer.WriteString(v.Domain)
-			buffer.WriteString(",\"url\"")
-			buffer.WriteString("\"http://127.0.0.1:8080/ipfs/" + v.Hash + "?channel=lestore&ftype=apk")
-			buffer.WriteString("'||'&'||'ftype=apk'\"},")
 		} else {
 			flag = false
 		}
 
 	}
-	buffer.WriteString("]")
-	out := make(map[string]interface{})
+	var resp Resp
+
 	if flag {
-		out["status"] = "1"
+		resp.Status = 1
 	} else {
-		out["status"] = "-1"
+		resp.Status = -1
 	}
-	out["length"] = length
-	out["data"] = buffer.String()
-	this.jsonResult(out)
+	resp.Length = length
+	resp.Datas = datas[0:length]
+	this.jsonResult(resp)
 	return
 }
