@@ -92,14 +92,10 @@ func main() {
 				service.ActionService.Add("publish", "root", "publish", 1000, "pkgs-abtest.txt 获取 apk 下载地址失败 ！")
 				return
 			}
-			fmt.Println(string(body))
 			//json str 转struct
 			service.ActionService.Add("publish", "root", "publish", 1000, "pkgs-abtest.txt 获取 apk 地址成功 ！")
 			var app App
 			if err := json.Unmarshal(body, &app); err == nil {
-				fmt.Println("================json str 转struct==")
-				fmt.Println(app)
-				fmt.Println(app.MD5)
 				service.ActionService.Add("publish", "root", "publish", 1000, "pkgs-abtest.txt 获取 MD5 "+app.MD5+"成功 ！")
 				m2[packageName] = app.MD5
 				for _, v := range app.Urls {
@@ -144,11 +140,11 @@ func main() {
 		resp, err := client.Do(req)
 
 		if err != nil {
-			logs.Info("发送请求到 baizeAppUpdate 失败，原因 :%v}", err)
+			fmt.Printf("发送请求到 baizeAppUpdate 失败，原因: %s\n", err)
 		}
 		defer resp.Body.Close()
 		body, _ := ioutil.ReadAll(resp.Body)
-		logs.Info("response Body: %s", string(body))
+		fmt.Printf("response Body: %s", string(body))
 	})
 	c2.Start()
 	beego.AppConfig.Set("version", VERSION)
