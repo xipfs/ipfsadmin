@@ -11,15 +11,19 @@ package controllers
  ============================================================================
 */
 import (
-	"fmt"
 	"time"
 
+	"bufio"
 	"context"
+	"encoding/json"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
-
-	"encoding/json"
+	"path"
+	"path/filepath"
+	"strings"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
@@ -150,39 +154,63 @@ func (this *PeerController) Pub() {
 		out["msg"] = "error"
 		this.jsonResult(out)
 	}
+	io.Copy(f, response.Body)
+	fmt.Println("download ok~~~")
+	defer response.Body.Close()
+	defer f.Close()
+	defer cancel()
 
 	go func() {
-		io.Copy(f, response.Body)
-		fmt.Println("download ok~~~")
-		defer response.Body.Close()
-		defer f.Close()
-		defer cancel()
-
-		// 发布资源
-		p := &entity.Resource{}
-		p.Name = fileName
-		p.Domain = ""
-		p.MD5 = ""
-		p.Version = ""
-		p.RepoUrl = fileUrl
-		p.TaskReview = 0
-		err = service.ResourceService.AddResource(p)
-
-		//构建任务
-		task := new(entity.Task)
-		task.ResourceId = p.Id
-		task.Message = ""
-		task.UserId = 1
-		task.UserName = "admin"
-		task.FileName = p.Name
-		task.PubEnvId = 1
-		task.BuildStatus = 1
-
-		err = service.TaskService.AddTask(task)
-		service.ActionService.Add("create_task", this.auth.GetUserName(), "task", task.Id, "")
-		service.DeployService.DoDeploy(task)
+		fi, err := os.Open(path.Join(beego.AppConfig.String("pub_dir"), fileName))
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, fileName+" 保存地址文件失败 ！")
+			return
+		}
+		defer fi.Close()
+		br := bufio.NewReader(fi)
+		m := make(map[string]string)  // package name -> url
+		m2 := make(map[string]string) // package name -> md5
+		for {
+			a, _, c := br.ReadLine()
+			if c == io.EOF {
+				break
+			}
+			packageName := string(a)
+			resp, err := http.Get("http://ams.lenovomm.com/ams/3.0/appdownaddress.do?dt=0&ty=2&pn=" + string(a) + "&cid=12654&tcid=12654&ic=0")
+			if err != nil {
+				fmt.Printf("Error: %s\n", err)
+				service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, fileName+" 获取 apk 下载地址失败 ！")
+				return
+			}
+			defer resp.Body.Close()
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				fmt.Printf("Error: %s\n", err)
+				service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, fileName+" 获取 apk 下载地址失败 ！")
+				return
+			}
+			fmt.Println(string(body))
+			//json str 转struct
+			service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, fileName+" 获取 apk 地址成功 ！")
+			var app App
+			if err := json.Unmarshal(body, &app); err == nil {
+				fmt.Println("================json str 转struct==")
+				fmt.Println(app)
+				fmt.Println(app.MD5)
+				service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, fileName+" 获取 MD5 "+app.MD5+"成功 ！")
+				m2[packageName] = app.MD5
+				for _, v := range app.Urls {
+					m[packageName] = v.DownUrl
+					break
+				}
+			}
+		}
+		for k, v := range m {
+			name := strings.Split(filepath.Base(v), "?")[0]
+			pub(name, v, k, fileName, m2[k])
+		}
 	}()
-
 	out["status"] = "1"
 	out["msg"] = "ok"
 	this.jsonResult(out)
