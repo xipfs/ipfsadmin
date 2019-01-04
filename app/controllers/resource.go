@@ -144,7 +144,7 @@ func (this *ResourceController) validResource(p *entity.Resource) error {
 
 // 验证提交
 func (this *ResourceController) Download() {
-	uploadFileName := this.GetString("uploadFileName")
+	uploadFileName := this.GetString("fileName")
 	uploadFileNames, _ := service.ResourceService.GetAllResourceByName(uploadFileName)
 	var buffer bytes.Buffer
 	buffer.WriteString("update ams_ipfs_conf set AVAILABLE='0';\r\n")
