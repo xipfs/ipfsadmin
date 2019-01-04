@@ -367,7 +367,7 @@ func pub(fileName string, fileUrl string, domain string, uploadFileName string, 
 	p.Status = 1
 	p.UploadFileName = uploadFileName
 	err = service.ResourceService.AddResource(p)
-
+	fmt.Println("resource id --->", p.Id)
 	//构建任务
 	task := new(entity.Task)
 	task.ResourceId = p.Id

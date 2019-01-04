@@ -65,7 +65,7 @@ func (this *resourceService) AddResource(resource *entity.Resource) error {
 	pageSize := 100000
 	var list []entity.Resource
 
-	_, err := o.QueryTable(this.table()).Filter("domain", resource.Domain).OrderBy("-create_time").Offset(offset).Limit(pageSize).All(&list)
+	_, err := o.QueryTable(this.table()).Filter("domain", resource.Domain).Filter("upload_file_name", resource.UploadFileName).OrderBy("-create_time").Offset(offset).Limit(pageSize).All(&list)
 	if len(list) > 1 {
 		resource = &list[0]
 		return err
