@@ -30,6 +30,7 @@
 							<td>{{date $v.CreateTime "Y-m-d H:i:s"}}</td>
 							<td>
 								{{if eq $v.Status -1}}<b class="red">本地发布失败</b>{{end}}
+								{{if eq $v.Status 0}}<b class="green">待处理</b>{{end}}
 								{{if eq $v.Status 1}}<b class="green">发布中</b>{{end}}
 								{{if eq $v.Status 2}}<b class="green">本地成功</b>{{end}}
 								{{if eq $v.Status 3}}<b class="green">全部成功</b>{{end}}

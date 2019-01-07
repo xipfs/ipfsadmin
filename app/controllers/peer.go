@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"bufio"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -23,6 +22,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/astaxie/beego"
@@ -123,42 +123,26 @@ func (this *PeerController) Report() {
 func (this *PeerController) Pub() {
 	//下载文件
 	fmt.Println("pub~~~~~")
-	fileUrl := this.GetString("fileUrl")
-	fmt.Println(fileUrl)
 	fileName := this.GetString("fileName")
+	//requestBody := this.GetRequestBody()
+
 	out := make(map[string]interface{})
-	client := &http.Client{}
-	reqest, err := http.NewRequest("GET", fileUrl, nil)
-
-	if err != nil {
-		fmt.Println(err)
-		out["status"] = "-1"
-		out["msg"] = "error"
-		this.jsonResult(out)
-		return
-	}
-	ctx, cancel := context.WithCancel(context.Background())
-	reqest = reqest.WithContext(ctx)
-	response, err := client.Do(reqest)
-	if err != nil {
-		fmt.Println("Fatal error ", err.Error())
-		out["status"] = "-1"
-		out["msg"] = "error"
-		this.jsonResult(out)
-		return
-	}
-
 	f, err := os.Create(beego.AppConfig.String("pub_dir") + fileName)
 	if err != nil {
 		out["status"] = "-1"
 		out["msg"] = "error"
 		this.jsonResult(out)
+		return
 	}
-	io.Copy(f, response.Body)
-	fmt.Println("download ok~~~")
-	defer response.Body.Close()
+	_, err2 := io.Copy(f, this.Controller.Ctx.Request.Body)
+	if err2 != nil {
+		out["status"] = "-1"
+		out["msg"] = "error"
+		this.jsonResult(out)
+		return
+	}
+	fmt.Println("获取下载列表成功 ！")
 	defer f.Close()
-	defer cancel()
 
 	go func() {
 		fi, err := os.Open(path.Join(beego.AppConfig.String("pub_dir"), fileName))
@@ -171,27 +155,46 @@ func (this *PeerController) Pub() {
 		br := bufio.NewReader(fi)
 		m := make(map[string]string)  // package name -> url
 		m2 := make(map[string]string) // package name -> md5
+		total := 0
 		for {
 			a, _, c := br.ReadLine()
 			if c == io.EOF {
 				break
 			}
 			packageName := string(a)
+			total++
+			fmt.Println(packageName)
+
+			p := &entity.Resource{}
+			p.Name = ""
+			p.Domain = packageName
+			p.MD5 = ""
+			p.Version = ""
+			p.RepoUrl = ""
+			p.TaskReview = 0
+			p.Status = 0
+			p.UploadFileName = fileName
+
+			add_err := service.ResourceService.AddResource(p)
+			if add_err != nil {
+				fmt.Printf("Error: %s\n", err)
+				service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, fileName+"处理同步配置["+packageName+"]失败 ！")
+				continue
+			}
+
 			resp, err := http.Get("http://ams.lenovomm.com/ams/3.0/appdownaddress.do?dt=0&ty=2&pn=" + string(a) + "&cid=12654&tcid=12654&ic=0")
 			if err != nil {
 				fmt.Printf("Error: %s\n", err)
 				service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, fileName+" 获取 apk 下载地址失败 ！")
-				return
+				continue
 			}
 			defer resp.Body.Close()
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				fmt.Printf("Error: %s\n", err)
 				service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, fileName+" 获取 apk 下载地址失败 ！")
-				return
+				continue
 			}
-			fmt.Println(string(body))
-			//json str 转struct
 			service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, fileName+" 获取 apk 地址成功 ！")
 			var app App
 			if err := json.Unmarshal(body, &app); err == nil {
@@ -203,6 +206,8 @@ func (this *PeerController) Pub() {
 				}
 			}
 		}
+		service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, fileName+" 获取到 "+strconv.Itoa(total)+" 个待更新 APK 信息 !")
+		fmt.Println(fileName + " 获取到 " + strconv.Itoa(total) + " 个待更新 APK 信息 !")
 		for k, v := range m {
 			name := strings.Split(filepath.Base(v), "?")[0]
 			pub(name, v, k, fileName, m2[k])
