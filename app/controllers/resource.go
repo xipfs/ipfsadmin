@@ -14,9 +14,14 @@ package controllers
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/astaxie/beego"
 	"github.com/xipfs/ipfsadmin/app/entity"
@@ -182,12 +187,46 @@ func (this *ResourceController) Query() {
 	length := 0
 	flag := true
 	var datas [100]Data
-	for _, v := range uploadFileNames {
-		if v.Status == 3 {
+	m := make(map[string]string)  // package name -> url
+	m2 := make(map[string]string) // package name -> md5
+	for _, vv := range uploadFileNames {
+		if vv.Status == 3 {
 
-			datas[length].Pn = v.Domain
-			datas[length].Url = "http://127.0.0.1:8080/ipfs/" + v.Hash + "?channel=lestore&ftype=apk'||'&'||'ftype=apk"
+			datas[length].Pn = vv.Domain
+			datas[length].Url = "http://127.0.0.1:8080/ipfs/" + vv.Hash + "?channel=lestore&ftype=apk'||'&'||'ftype=apk"
 			length++
+		} else if vv.Status == -1 {
+			flag = false
+			go func() {
+				fmt.Println("重新同步失败文件 " + vv.Domain)
+				resp, err := http.Get("http://ams.lenovomm.com/ams/3.0/appdownaddress.do?dt=0&ty=2&pn=" + vv.Domain + "&cid=12654&tcid=12654&ic=0")
+				if err != nil {
+					fmt.Printf("Error: %s\n", err)
+					service.ActionService.Add("publish", "admin", "publish", 1000, vv.Domain+" 获取 apk 下载地址失败 ！")
+					return
+				}
+				defer resp.Body.Close()
+				body, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					fmt.Printf("Error: %s\n", err)
+					service.ActionService.Add("publish", "admin", "publish", 1000, vv.Domain+" 获取 apk 下载地址失败 ！")
+					return
+				}
+				service.ActionService.Add("publish", "admin", "publish", 1000, vv.Domain+" 获取 apk 地址成功 ！")
+				var app App
+				if err := json.Unmarshal(body, &app); err == nil {
+					service.ActionService.Add("publish", "admin", "publish", 1000, vv.Domain+" 获取 MD5 "+app.MD5+"成功 ！")
+					m2[vv.Domain] = app.MD5
+					for _, v := range app.Urls {
+						m[vv.Domain] = v.DownUrl
+						break
+					}
+				}
+				for k, v := range m {
+					name := strings.Split(filepath.Base(v), "?")[0]
+					pub(name, v, k, uploadFileName, m2[k])
+				}
+			}()
 		} else {
 			flag = false
 		}
