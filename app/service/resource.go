@@ -67,7 +67,7 @@ func (this *resourceService) AddResource(resource *entity.Resource) error {
 
 	_, err := o.QueryTable(this.table()).Filter("domain", resource.Domain).Filter("upload_file_name", resource.UploadFileName).OrderBy("-create_time").Offset(offset).Limit(pageSize).All(&list)
 	if len(list) > 0 {
-		resource = &list[0]
+		resource.Id = list[0].Id
 		return err
 	} else {
 		_, err := o.Insert(resource)
