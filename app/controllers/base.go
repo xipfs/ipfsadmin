@@ -76,7 +76,7 @@ func (this *BaseController) initAuth() {
 	this.auth = service.NewAuth()
 	this.auth.Init(token)
 	this.userId = this.auth.GetUserId()
-	if this.controllerName == "peer" || this.controllerName == "config" {
+	if this.controllerName == "peer" || this.controllerName == "config" || this.controllerName == "resource" {
 		return
 	}
 	if !this.auth.IsLogined() {
