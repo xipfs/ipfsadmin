@@ -1,1 +1,1 @@
-nohup ./ipfsadmin >> /root/ipfsadmin.log 2>&1 &
+nohup ./ipfsadmin >> /root/logs/ipfsadmin/ipfsadmin.log 2>&1 &
