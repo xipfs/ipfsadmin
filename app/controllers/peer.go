@@ -39,6 +39,7 @@ type PeerController struct {
 
 var (
 	client sarama.SyncProducer
+	flag   = false
 )
 
 // 首页
@@ -75,12 +76,14 @@ func (this *PeerController) Report() {
 	requestBody := this.GetRequestBody()
 	msg := string(requestBody)
 	logs.Info(msg)
-	if client == nil {
-		InitKafka()
+	if flag {
 		SendToKafka(msg, "test")
 	} else {
+		InitKafka()
+		flag = true
 		SendToKafka(msg, "test")
 	}
+
 	out := make(map[string]interface{})
 	out["status"] = "1"
 	out["msg"] = "ok"
@@ -101,7 +104,7 @@ func InitKafka() (err error) {
 		return
 	}
 	//记录步骤信息
-	logs.Debug("init kafka success")
+	logs.Info("init kafka success")
 	return
 }
 
@@ -120,7 +123,7 @@ func SendToKafka(data, topic string) (err error) {
 		return
 	}
 
-	logs.Debug("send succ, pid:%v offset:%v, topic:%v\n", pid, offset, topic)
+	logs.Info("send succ, pid:%v offset:%v, topic:%v\n", pid, offset, topic)
 	return
 }
 
