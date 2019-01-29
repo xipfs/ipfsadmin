@@ -79,9 +79,13 @@ func (this *PeerController) Report() {
 	if flag {
 		SendToKafka(msg, "test")
 	} else {
-		InitKafka()
-		flag = true
-		SendToKafka(msg, "test")
+		err := InitKafka()
+		if err != nil {
+
+		} else {
+			SendToKafka(msg, "test")
+		}
+
 	}
 
 	out := make(map[string]interface{})
@@ -101,11 +105,12 @@ func InitKafka() (err error) {
 	client, err = sarama.NewSyncProducer([]string{"172.31.31.252:9092"}, config)
 	if err != nil {
 		logs.Error("init kafka producer failed, err:", err)
-		return
+		return err
 	}
 	//记录步骤信息
 	logs.Info("init kafka success")
-	return
+	flag = true
+	return nil
 }
 
 /*
