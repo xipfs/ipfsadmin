@@ -25,18 +25,21 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Shopify/sarama"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
-	"github.com/gogo/protobuf/proto"
 	"github.com/xipfs/ipfsadmin/app/entity"
 	"github.com/xipfs/ipfsadmin/app/libs"
-	"github.com/xipfs/ipfsadmin/app/msg"
 	"github.com/xipfs/ipfsadmin/app/service"
 )
 
 type PeerController struct {
 	BaseController
 }
+
+var (
+	client sarama.SyncProducer
+)
 
 // 首页
 func (this *PeerController) Index() {
@@ -69,54 +72,56 @@ func (this *PeerController) List() {
 
 // 上报节点信息
 func (this *PeerController) Report() {
-	reportRecordList := &msg.ReportRecordList{}
 	requestBody := this.GetRequestBody()
-	proto.Unmarshal(requestBody, reportRecordList)
-	jsons, errs := json.Marshal(reportRecordList)
-	if errs != nil {
-		fmt.Println(errs.Error())
-	}
-	logs.Info(string(jsons))
-	req := this.Ctx.Request
-	addr := req.RemoteAddr
-	//fmt.Println(reportRecordList)
-	const base_format = "2006-01-02 15:04:05"
-	peerId := ""
-	for _, v := range reportRecordList.Records {
-		p := &entity.PeerLog{}
-		p.EventAction = v.EventAction
-		p.Goarch = v.CommonData["goarch"]
-		p.Goos = v.CommonData["goos"]
-		p.Mac = v.CommonData["mac"]
-		p.PeerId = v.CommonData["peer_id"]
-		peerId = p.PeerId
-		logs.Info("{ip:%s,pid:%s}", addr, peerId)
-		p.CreateTime, _ = time.Parse(base_format, v.CommonData["timestr"])
-		//fmt.Println(p)
-		//		err := service.PeerLogService.AddPeerLog(p)
-		//		if err != nil {
-		//			out := make(map[string]interface{})
-		//			out["status"] = "-1"
-		//			out["msg"] = "error"
-		//			this.jsonResult(out)
-		//			return
-		//		}
-	}
-	if peerId != "" {
-		peer := &entity.Peer{}
-		peer.Status = 1
-		peer.PeerId = peerId
-		peer.UpdateTime = time.Now()
-		peer.CreateTime = time.Now()
-		err := service.PeerService.AddPeer(peer, "PeerId", "Status", "UpdateTime", "CreateTime")
-		if err != nil {
-			fmt.Println(err)
-		}
+	msg := string(requestBody)
+	logs.Info(msg)
+	if client == nil {
+		InitKafka()
+		SendToKafka(msg, "test")
+	} else {
+		SendToKafka(msg, "test")
 	}
 	out := make(map[string]interface{})
 	out["status"] = "1"
 	out["msg"] = "ok"
 	this.jsonResult(out)
+}
+
+/*初始化kafka*/
+func InitKafka() (err error) {
+
+	config := sarama.NewConfig()
+	config.Producer.RequiredAcks = sarama.WaitForAll
+	config.Producer.Partitioner = sarama.NewRandomPartitioner
+	config.Producer.Return.Successes = true
+
+	client, err = sarama.NewSyncProducer([]string{"172.31.31.252:9092"}, config)
+	if err != nil {
+		logs.Error("init kafka producer failed, err:", err)
+		return
+	}
+	//记录步骤信息
+	logs.Debug("init kafka success")
+	return
+}
+
+/*
+   发送到kafak
+*/
+func SendToKafka(data, topic string) (err error) {
+
+	msg := &sarama.ProducerMessage{}
+	msg.Topic = topic
+	msg.Value = sarama.StringEncoder(data)
+
+	pid, offset, err := client.SendMessage(msg)
+	if err != nil {
+		logs.Error("send message failed, err:%v data:%v topic:%v", err, data, topic)
+		return
+	}
+
+	logs.Debug("send succ, pid:%v offset:%v, topic:%v\n", pid, offset, topic)
+	return
 }
 
 // 发布资源
