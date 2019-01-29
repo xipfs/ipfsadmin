@@ -75,23 +75,26 @@ func (this *PeerController) List() {
 func (this *PeerController) Report() {
 	requestBody := this.GetRequestBody()
 	msg := string(requestBody)
-	req := this.Ctx.Request
-	addr := req.RemoteAddr
-	time := time.Now().Format("2006-01-02 15:04:05")
-	msg = time + "\u0003" + addr + "\u0003" + msg
-	logs.Info(msg)
-	if flag {
-		SendToKafka(msg, "test")
-	} else {
-		err := InitKafka()
-		if err != nil {
-
-		} else {
+	if strings.HasPrefix(msg, "3.0") {
+		req := this.Ctx.Request
+		addr := req.RemoteAddr
+		time := time.Now().Format("2006-01-02 15:04:05")
+		msg = time + "\u0003" + addr + "\u0003" + msg
+		logs.Info(msg)
+		if flag {
 			SendToKafka(msg, "test")
+		} else {
+			err := InitKafka()
+			if err != nil {
+
+			} else {
+				SendToKafka(msg, "test")
+			}
+
 		}
+	} else {
 
 	}
-
 	out := make(map[string]interface{})
 	out["status"] = "1"
 	out["msg"] = "ok"

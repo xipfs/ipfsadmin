@@ -15,6 +15,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/astaxie/beego/logs"
 	"github.com/xipfs/ipfsadmin/app/entity"
@@ -59,6 +60,8 @@ func (this *ConfigController) Get() {
 		config, _ = service.ConfigService.GetConfig(1)
 	}
 	msg := fmt.Sprintf("config_get:{ip:%s,pid:%s,config:%d,timestr:%s}", addr, p.PeerId, config.Id, p.TimeStr)
+	time := time.Now().Format("2006-01-02 15:04:05")
+	msg = time + "\u0003" + addr + "\u0003" + msg
 	logs.Info(msg)
 	if flag {
 		SendToKafka(msg, "test")
