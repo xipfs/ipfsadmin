@@ -28,7 +28,10 @@ type ConfigController struct {
 
 type ConfigParam struct {
 	PeerId        string `json:"peer_id"`
-	TimeStr       string `json:"timestr"`
+	TimeStr       string `json:"local_timestr"`
+	Version       string `json:"version"`
+	Goos          string `json:"goos"`
+	Goarch        string `json:"goarch"`
 	ExtParams     string `json:"extParams"`
 	DynamicParams string `json:"dynamicParams"`
 }
@@ -59,9 +62,8 @@ func (this *ConfigController) Get() {
 	} else {
 		config, _ = service.ConfigService.GetConfig(1)
 	}
-	msg := fmt.Sprintf("config_get:{ip:%s,pid:%s,config:%d,timestr:%s}", addr, p.PeerId, config.Id, p.TimeStr)
 	time := time.Now().Format("2006-01-02 15:04:05")
-	msg = time + "\u0003" + addr + "\u0003" + msg
+	msg := fmt.Sprintf("%s\u0003%s\u0003%s\u0003%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%d\u0002", time, addr, p.Version, "config_git", p.Version, p.Version, p.PeerId, p.Goarch, "", "", p.TimeStr, "", p.ExtParams, p.DynamicParams, config.Id)
 	logs.Info(msg)
 	if flag {
 		SendToKafka(msg, "test")
