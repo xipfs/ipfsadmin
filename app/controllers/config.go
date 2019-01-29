@@ -64,17 +64,19 @@ func (this *ConfigController) Get() {
 	}
 	time := time.Now().Format("2006-01-02 15:04:05")
 	msg := fmt.Sprintf("%s\u0003%s\u0003%s\u0003%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%d\u0002", time, addr, p.Version, "config_get", p.Version, p.Version, p.PeerId, p.Goarch, "", "", p.TimeStr, "", p.ExtParams, p.DynamicParams, config.Id)
-	logs.Info(msg)
-	if flag {
-		SendToKafka(msg, "test")
-	} else {
-		err := InitKafka()
-		if err != nil {
-
-		} else {
+	if p.Version == "3.0" {
+		logs.Info(msg)
+		if flag {
 			SendToKafka(msg, "test")
-		}
+		} else {
+			err := InitKafka()
+			if err != nil {
 
+			} else {
+				SendToKafka(msg, "test")
+			}
+
+		}
 	}
 	this.Ctx.WriteString(config.Value)
 }
