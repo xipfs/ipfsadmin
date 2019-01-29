@@ -13,6 +13,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/astaxie/beego/logs"
@@ -57,7 +58,18 @@ func (this *ConfigController) Get() {
 	} else {
 		config, _ = service.ConfigService.GetConfig(1)
 	}
+	msg := fmt.Sprintf("config_get:{ip:%s,pid:%s,config:%d,timestr:%s}", addr, p.PeerId, config.Id, p.TimeStr)
+	logs.Info(msg)
+	if flag {
+		SendToKafka(msg, "test")
+	} else {
+		err := InitKafka()
+		if err != nil {
 
-	logs.Info("config_get:{ip:%s,pid:%s,config:%s,timestr:%s}", addr, p.PeerId, config.Value, p.TimeStr)
+		} else {
+			SendToKafka(msg, "test")
+		}
+
+	}
 	this.Ctx.WriteString(config.Value)
 }

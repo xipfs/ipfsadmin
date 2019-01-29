@@ -78,7 +78,7 @@ func (this *PeerController) Report() {
 	req := this.Ctx.Request
 	addr := req.RemoteAddr
 	time := time.Now().Format("2006-01-02 15:04:05")
-	msg = time + `\u0003` + addr + `\u003` + msg
+	msg = time + "\u0003" + addr + "\u0003" + msg
 	logs.Info(msg)
 	if flag {
 		SendToKafka(msg, "test")
