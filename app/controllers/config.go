@@ -63,7 +63,7 @@ func (this *ConfigController) Get() {
 		config, _ = service.ConfigService.GetConfig(1)
 	}
 	time := time.Now().Format("2006-01-02 15:04:05")
-	msg := fmt.Sprintf("%s\u0003%s\u0003%s\u0003%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%d\u0002", time, addr, p.Version, "config_git", p.Version, p.Version, p.PeerId, p.Goarch, "", "", p.TimeStr, "", p.ExtParams, p.DynamicParams, config.Id)
+	msg := fmt.Sprintf("%s\u0003%s\u0003%s\u0003%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%d\u0002", time, addr, p.Version, "config_get", p.Version, p.Version, p.PeerId, p.Goarch, "", "", p.TimeStr, "", p.ExtParams, p.DynamicParams, config.Id)
 	logs.Info(msg)
 	if flag {
 		SendToKafka(msg, "test")
