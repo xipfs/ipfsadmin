@@ -41,6 +41,11 @@
 				"name": "服务器管理",
 				"route": "server.list",
 				"action": "ServerController.List"
+			},
+			{
+				"name": "配置管理",
+				"route": "config.list",
+				"action": "ConfigController.List"
 			}
 		]
 	}, 

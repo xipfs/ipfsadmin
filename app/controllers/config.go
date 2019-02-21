@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"github.com/xipfs/ipfsadmin/app/entity"
 	"github.com/xipfs/ipfsadmin/app/service"
@@ -79,4 +80,70 @@ func (this *ConfigController) Get() {
 		}
 	}
 	this.Ctx.WriteString(config.Value)
+}
+
+// 模板列表
+func (this *ConfigController) List() {
+	list, _ := service.ConfigService.GetAllConfig()
+	this.Data["pageTitle"] = "配置"
+	this.Data["list"] = list
+	this.display()
+}
+
+// 添加配置
+func (this *ConfigController) Add() {
+	if this.isPost() {
+		key := this.GetString("key")
+		value := this.GetString("value")
+
+		if key == "" || value == "" {
+			this.showMsg("配置 key、value 不能为空", MSG_ERR)
+		}
+
+		config := new(entity.Config)
+		config.Key = key
+		config.Value = value
+		err := service.ConfigService.AddConfig(config)
+		this.checkError(err)
+		this.redirect(beego.URLFor("ConfigController.List"))
+	}
+	this.Data["pageTitle"] = "添加配置"
+	this.display()
+}
+
+// 编辑模板
+func (this *ConfigController) Edit() {
+	id, _ := this.GetInt("id")
+	config, err := service.ConfigService.GetConfig(id)
+	this.checkError(err)
+
+	if this.isPost() {
+		key := this.GetString("key")
+		value := this.GetString("value")
+
+		if key == "" || value == "" {
+			this.showMsg("配置 key、value 不能为空", MSG_ERR)
+		}
+
+		config.Key = key
+		config.Value = value
+		err := service.ConfigService.SaveConfig(config)
+		this.checkError(err)
+
+		this.redirect(beego.URLFor("ConfigController.List"))
+	}
+
+	this.Data["pageTitle"] = "修改配置"
+	this.Data["config"] = config
+	this.display()
+}
+
+// 删除模板
+func (this *ConfigController) Del() {
+	id, _ := this.GetInt("id")
+
+	err := service.ConfigService.DelConfig(id)
+	this.checkError(err)
+
+	this.redirect(beego.URLFor("ConfigController.List"))
 }

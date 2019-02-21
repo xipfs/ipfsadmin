@@ -17,6 +17,18 @@ func (this *configService) AddConfig(config *entity.Config) error {
 	return err
 }
 
+// 添加配置
+func (this *configService) SaveConfig(config *entity.Config) error {
+	_, err := o.Update(config)
+	return err
+}
+
+// 删除配置
+func (this *configService) DelConfig(id int) error {
+	_, err := o.QueryTable(this.table()).Filter("id", id).Delete()
+	return err
+}
+
 // 获取所有配置
 func (this *configService) GetAllConfig() ([]entity.Config, error) {
 	return this.GetList(1, -1)
