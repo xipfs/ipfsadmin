@@ -45,6 +45,7 @@ func (this *ConfigController) Get() {
 	requestBody := this.GetRequestBody()
 	json.Unmarshal(requestBody, p)
 	config := &entity.Config{}
+	logs.Info("config request ", p.Version, p.PeerId)
 	if p.Version == "3.0" {
 		config, _ = service.ConfigService.GetConfig(3)
 	} else {
