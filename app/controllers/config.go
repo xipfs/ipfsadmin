@@ -72,13 +72,13 @@ func (this *ConfigController) Get() {
 	if p.Version == "3.0" {
 		logs.Info(msg)
 		if flag {
-			SendToKafka(msg, "baize")
+			SendToKafka(msg, "test")
 		} else {
 			err := InitKafka()
 			if err != nil {
 
 			} else {
-				SendToKafka(msg, "baize")
+				SendToKafka(msg, "test")
 			}
 		}
 	}
