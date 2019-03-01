@@ -75,7 +75,7 @@ func (this *PeerController) List() {
 func (this *PeerController) Report() {
 	requestBody := this.GetRequestBody()
 	msg := string(requestBody)
-	logs.Info(msg)
+	logs.Info("kafka report ", msg)
 	if strings.HasPrefix(msg, "3.0") {
 		req := this.Ctx.Request
 		addr := req.RemoteAddr
