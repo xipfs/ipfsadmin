@@ -17,6 +17,8 @@ import (
 	"strings"
 	"time"
 
+	"strconv"
+
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"github.com/xipfs/ipfsadmin/app/entity"
@@ -30,11 +32,13 @@ type ConfigController struct {
 type ConfigParam struct {
 	PeerId        string `json:"peer_id"`
 	TimeStr       string `json:"local_timestr"`
+	LocalTimezone string `json:"local_timezone"`
 	Version       string `json:"version"`
 	Goos          string `json:"goos"`
 	Goarch        string `json:"goarch"`
 	ExtParams     string `json:"extParams"`
 	DynamicParams string `json:"dynamicParams"`
+	Runmode       string `json:"run_mode"`
 }
 
 // 获取状态
@@ -68,7 +72,8 @@ func (this *ConfigController) Get() {
 		}
 	}
 	time := time.Now().Format("2006-01-02 15:04:05")
-	msg := fmt.Sprintf("%s\u0003%s\u0003%s\u0003%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%d\u0002", time, addr, p.Version, "config_get", p.PeerId, p.Version, p.Version, p.Goarch, "", "", p.TimeStr, "", p.ExtParams, p.DynamicParams, config.Id)
+	b := strconv.Itoa(config.Id)
+	msg := fmt.Sprintf("%s\u0003%s\u0003%s\u0003%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s\u0001%s", time, addr, p.Version, "config_get", p.PeerId, p.Version, p.Version, p.Goarch, "", p.TimeStr, p.LocalTimezone, p.ExtParams, p.DynamicParams, p.Runmode, "configId\u0004"+b)
 	if p.Version == "3.0" {
 		logs.Info("kafka config :", msg)
 		if flag {
