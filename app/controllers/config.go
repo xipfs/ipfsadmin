@@ -36,7 +36,7 @@ type ConfigParam struct {
 	Version       string `json:"version"`
 	Goos          string `json:"goos"`
 	Goarch        string `json:"goarch"`
-	ExtParams     string `json:"extParams"`
+	ExtParams     string `json:"startParams"`
 	DynamicParams string `json:"dynamicParams"`
 	Runmode       string `json:"run_mode"`
 }
