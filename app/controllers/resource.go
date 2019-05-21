@@ -167,6 +167,10 @@ func (this *ResourceController) RePublish() {
 		service.ActionService.Add("publish", "admin", "publish", 1000, res.Domain+" 获取 apk 地址成功 ！")
 		var app App
 		if err := json.Unmarshal(body, &app); err == nil {
+			if app.ErrorMsg !=""{
+				service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, uploadFileName+"  "+app.ErrorMsg)
+				return
+			}
 			service.ActionService.Add("publish", "admin", "publish", 1000, res.Domain+" 获取 MD5 "+app.MD5+"成功 ！")
 			m2[res.Domain] = app.MD5
 			for _, v := range app.Urls {
@@ -262,6 +266,10 @@ func (this *ResourceController) Query() {
 				service.ActionService.Add("publish", "admin", "publish", 1000, vv.Domain+" 获取 apk 地址成功 ！")
 				var app App
 				if err := json.Unmarshal(body, &app); err == nil {
+					if app.ErrorMsg !=""{
+						service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, uploadFileName+"  "+app.ErrorMsg)
+						return
+					}
 					service.ActionService.Add("publish", "admin", "publish", 1000, vv.Domain+" 获取 MD5 "+app.MD5+"成功 ！")
 					m2[vv.Domain] = app.MD5
 					for _, v := range app.Urls {
