@@ -33,7 +33,7 @@ func (this *resourceService) GetAllResourceByName(uploadFileName string) ([]enti
 	var list []entity.Resource
 	offset := 0
 	pageSize := 100000
-	_, err := o.QueryTable(this.table()).OrderBy("-create_time").Filter("UploadFileName", uploadFileName).Offset(offset).Limit(pageSize).All(&list)
+	_, err := o.QueryTable(this.table()).OrderBy("-create_time","status").Filter("UploadFileName", uploadFileName).Offset(offset).Limit(pageSize).All(&list)
 	return list, err
 }
 
@@ -50,7 +50,7 @@ func (this *resourceService) GetList(page, pageSize int) ([]entity.Resource, err
 		}
 	}
 
-	_, err := o.QueryTable(this.table()).OrderBy("-create_time").Offset(offset).Limit(pageSize).All(&list)
+	_, err := o.QueryTable(this.table()).OrderBy("-create_time","status").Offset(offset).Limit(pageSize).All(&list)
 	return list, err
 }
 

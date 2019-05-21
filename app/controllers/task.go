@@ -42,6 +42,7 @@ type App struct {
 	MD5         string `json:"MD5"`
 	downurls    string `json:"MD5"`
 	Urls        []Url  `json:"downurls"`
+	ErrorMsg    string `json:"errorMsg"`
 }
 
 type Url struct {
@@ -281,6 +282,11 @@ func (this *TaskController) Publish() {
 				var app App
 				if err := json.Unmarshal(body, &app); err == nil {
 					fmt.Println("================json str 转struct==")
+					fmt.Println(app.ErrorMsg)
+					if app.ErrorMsg !=""{
+						service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, uploadFileName+"  "+app.ErrorMsg)
+						return
+					}
 					fmt.Println(app)
 					fmt.Println(app.MD5)
 					service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, uploadFileName+" 获取 MD5 "+app.MD5+"成功 ！")
