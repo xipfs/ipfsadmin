@@ -141,6 +141,48 @@ func (this *ResourceController) Del() {
 	this.redirect(beego.URLFor("ResourceController.List"))
 }
 
+// 重新发布资源
+func (this *ResourceController) RePublish() {
+	id, _ := this.GetInt("id")
+
+	m := make(map[string]string)  // package name -> url
+	m2 := make(map[string]string) // package name -> md5
+	res,_ := service.ResourceService.GetResource(id)
+	uploadFileName := res.UploadFileName
+	go func() {
+		fmt.Println("重新同步失败文件 " + res.Domain)
+		resp, err := http.Get("http://ams.lenovomm.com/ams/3.0/appdownaddress.do?dt=0&ty=2&pn=" + res.Domain + "&cid=12654&tcid=12654&ic=0")
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			service.ActionService.Add("publish", "admin", "publish", 1000, res.Domain+" 获取 apk 下载地址失败 ！")
+			return
+		}
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Printf("Error: %s\n", err)
+			service.ActionService.Add("publish", "admin", "publish", 1000, res.Domain+" 获取 apk 下载地址失败 ！")
+			return
+		}
+		service.ActionService.Add("publish", "admin", "publish", 1000, res.Domain+" 获取 apk 地址成功 ！")
+		var app App
+		if err := json.Unmarshal(body, &app); err == nil {
+			service.ActionService.Add("publish", "admin", "publish", 1000, res.Domain+" 获取 MD5 "+app.MD5+"成功 ！")
+			m2[res.Domain] = app.MD5
+			for _, v := range app.Urls {
+				m[res.Domain] = v.DownUrl
+				break
+			}
+		}
+		for k, v := range m {
+			name := strings.Split(filepath.Base(v), "?")[0]
+			pub(name, v, k, uploadFileName, m2[k])
+		}
+	}()
+
+	this.redirect(beego.URLFor("ResourceController.List"))
+}
+
 // 验证提交
 func (this *ResourceController) validResource(p *entity.Resource) error {
 	errorMsg := ""
