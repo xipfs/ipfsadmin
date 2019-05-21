@@ -108,6 +108,34 @@ jQuery(function($){
             ]
         });
     });
-
+    $( ".publish_confirm" ).on('click', function(e) {
+        var del_url = $(this).attr('href');
+        e.preventDefault();
+        $( "#dialog-confirm" ).removeClass('hide').dialog({
+            resizable: false,
+            width: '320',
+            modal: true,
+            title: "<div class='widget-header'><h4 class='smaller'><i class='ace-icon fa fa-exclamation-triangle red'></i> 重新发布确认</h4></div>",
+            title_html: true,
+            buttons: [
+                {
+                    html: "<i class='ace-icon fa fa-trash-o bigger-110'></i>&nbsp; 确认",
+                    "class" : "btn btn-danger btn-sm",
+                    click: function() {
+                        $( this).dialog('close');
+                        window.location.href = del_url;
+                    }
+                }
+                ,
+                {
+                    html: "<i class='ace-icon fa fa-times bigger-110'></i>&nbsp; 取消",
+                    "class" : "btn btn-sm",
+                    click: function() {
+                        $( this ).dialog( "close" );
+                    }
+                }
+            ]
+        });
+    });
 
 });
