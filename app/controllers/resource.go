@@ -46,13 +46,18 @@ type Data struct {
 // 资源列表
 func (this *ResourceController) List() {
 	page, _ := strconv.Atoi(this.GetString("page"))
+	status, _ := this.GetInt("status")
 	if page < 1 {
 		page = 1
 	}
+	filter := make([]interface{}, 0, 6)
+	if status == 2 {
+		filter = append(filter, "status", 3)
+	} else {
+		filter = append(filter, "status__lt", 3)
+	}
 
-	count, _ := service.ResourceService.GetTotal()
-	list, _ := service.ResourceService.GetList(page, this.pageSize)
-
+	list, count := service.ResourceService.GetListByFilter(page, this.pageSize, filter...)
 	this.Data["count"] = count
 	this.Data["list"] = list
 	this.Data["pageBar"] = libs.NewPager(page, int(count), this.pageSize, beego.URLFor("ResourceController.List"), true).ToString()

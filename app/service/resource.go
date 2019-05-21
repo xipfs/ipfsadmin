@@ -54,6 +54,39 @@ func (this *resourceService) GetList(page, pageSize int) ([]entity.Resource, err
 	return list, err
 }
 
+func (this *resourceService) GetListByFilter(page, pageSize int, filters ...interface{}) ([]entity.Resource, int64) {
+	var (
+		list  []entity.Resource
+		count int64
+	)
+
+	offset := 0
+	if pageSize == -1 {
+		pageSize = 100000
+	} else {
+		offset = (page - 1) * pageSize
+		if offset < 0 {
+			offset = 0
+		}
+	}
+	query := o.QueryTable(this.table())
+	if len(filters) > 0 {
+		l := len(filters)
+		for k := 0; k < l; k += 2 {
+			_, ok := filters[k].(string)
+			if !ok {
+				continue
+			}
+			v := filters[k+1]
+			query = query.Filter(filters[k].(string), v)
+		}
+	}
+	count, _ = query.Count()
+	query.OrderBy("-update_time").Offset(offset).Limit(pageSize).All(&list)
+	return list, count
+}
+
+
 // 获取资源总数
 func (this *resourceService) GetTotal() (int64, error) {
 	return o.QueryTable(this.table()).Count()
