@@ -40,6 +40,7 @@ type PeerController struct {
 var (
 	client sarama.SyncProducer
 	flag   = false
+ 	PubFlag = false
 )
 
 // 首页
@@ -141,6 +142,7 @@ func SendToKafka(data, topic string) (err error) {
 
 // 发布资源
 func (this *PeerController) Pub() {
+	PubFlag = false
 	//下载文件
 	fmt.Println("pub~~~~~")
 	fileName := this.GetString("fileName")
@@ -218,6 +220,10 @@ func (this *PeerController) Pub() {
 			service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, fileName+" 获取 apk 地址成功 ！")
 			var app App
 			if err := json.Unmarshal(body, &app); err == nil {
+				if app.ErrorMsg !=""{
+					service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, fileName+"  "+app.ErrorMsg)
+					continue
+				}
 				service.ActionService.Add("publish", this.auth.GetUserName(), "publish", 1000, fileName+" 获取 MD5 "+app.MD5+"成功 ！")
 				m2[packageName] = app.MD5
 				for _, v := range app.Urls {
@@ -232,6 +238,7 @@ func (this *PeerController) Pub() {
 			name := strings.Split(filepath.Base(v), "?")[0]
 			pub(name, v, k, fileName, m2[k])
 		}
+		PubFlag = true
 	}()
 	out["status"] = "1"
 	out["msg"] = "ok"

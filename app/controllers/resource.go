@@ -236,7 +236,6 @@ func (this *ResourceController) Query() {
 	uploadFileName := this.GetString("fileName")
 	uploadFileNames, _ := service.ResourceService.GetAllResourceByName(uploadFileName)
 	length := 0
-	flag := true
 	var datas [1024]Data
 	m := make(map[string]string)  // package name -> url
 	m2 := make(map[string]string) // package name -> md5
@@ -289,10 +288,10 @@ func (this *ResourceController) Query() {
 	}
 	var resp Resp
 
-	if flag {
+	if PubFlag{
 		resp.Status = 1
-	} else {
-		resp.Status = 1
+	}else{
+		resp.Status = -1
 	}
 	resp.Length = length
 	resp.Datas = datas[0:length]
