@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/astaxie/beego"
 	"github.com/xipfs/ipfsadmin/app/entity"
@@ -33,7 +34,7 @@ type ResourceController struct {
 	BaseController
 }
 
-type Resp struct {
+type Resp struct {:
 	Status int    `json:"status"`
 	Length int    `json:"length"`
 	Datas  []Data `json:"data"`
@@ -42,6 +43,13 @@ type Data struct {
 	Pn  string `json:"pn"`
 	Url string `json:"url"`
 }
+
+
+type SafeMap struct{
+	sync.RWMutex
+	data map[string]string
+}
+
 
 // 资源列表
 func (this *ResourceController) List() {
@@ -145,8 +153,8 @@ func (this *ResourceController) Del() {
 func (this *ResourceController) RePublish() {
 	id, _ := this.GetInt("id")
 
-	m := make(map[string]string)  // package name -> url
-	m2 := make(map[string]string) // package name -> md5
+	m := SafeMap{data: make(map[string]string)}// package name -> url
+	m2 := SafeMap{data: make(map[string]string)}// package name -> md5
 	res,_ := service.ResourceService.GetResource(id)
 	uploadFileName := res.UploadFileName
 	go func() {
@@ -172,9 +180,13 @@ func (this *ResourceController) RePublish() {
 				return
 			}
 			service.ActionService.Add("publish", "admin", "publish", 1000, res.Domain+" 获取 MD5 "+app.MD5+"成功 ！")
-			m2[res.Domain] = app.MD5
+			m2.Lock();
+			m2.data[res.Domain] = app.MD5
+			m2.Unlock();
 			for _, v := range app.Urls {
-				m[res.Domain] = v.DownUrl
+				m.Lock()
+				m.data[res.Domain] = v.DownUrl
+				m.Unlock()
 				break
 			}
 		}
@@ -237,8 +249,8 @@ func (this *ResourceController) Query() {
 	uploadFileNames, _ := service.ResourceService.GetAllResourceByName(uploadFileName)
 	length := 0
 	var datas [1024]Data
-	m := make(map[string]string)  // package name -> url
-	m2 := make(map[string]string) // package name -> md5
+	m := SafeMap{data: make(map[string]string)}// package name -> url
+	m2 := SafeMap{data: make(map[string]string)}// package name -> md5
 	for _, vv := range uploadFileNames {
 		if vv.Status == 3 {
 
@@ -270,9 +282,13 @@ func (this *ResourceController) Query() {
 						return
 					}
 					service.ActionService.Add("publish", "admin", "publish", 1000, vv.Domain+" 获取 MD5 "+app.MD5+"成功 ！")
-					m2[vv.Domain] = app.MD5
+					m2.Lock()
+					m2.data[vv.Domain] = app.MD5
+					m2.Unlock()
 					for _, v := range app.Urls {
-						m[vv.Domain] = v.DownUrl
+						m.Lock()
+						m.data[vv.Domain] = v.DownUrl
+						m.Unlock()
 						break
 					}
 				}
