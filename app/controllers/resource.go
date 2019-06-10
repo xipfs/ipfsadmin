@@ -249,8 +249,8 @@ func (this *ResourceController) Query() {
 	uploadFileNames, _ := service.ResourceService.GetAllResourceByName(uploadFileName)
 	length := 0
 	var datas [1024]Data
-	m := SafeMap{data: make(map[string]string)}// package name -> url
-	m2 := SafeMap{data: make(map[string]string)}// package name -> md5
+	//m := SafeMap{data: make(map[string]string)}// package name -> url
+	//m2 := SafeMap{data: make(map[string]string)}// package name -> md5
 	for _, vv := range uploadFileNames {
 		if vv.Status == 3 {
 
