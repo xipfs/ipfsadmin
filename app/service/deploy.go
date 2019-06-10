@@ -45,7 +45,9 @@ func (this *deployService) DeployTask(taskId int) error {
 func (this *deployService) DoDeploy(task *entity.Task) {
 	// 1. 添加到本地库
 	resource, err := ResourceService.GetResource(task.ResourceId)
-	fmt.Println(resource.Id)
+	if resource == nil{
+		return
+	}
 	out, stderr, err := libs.ExecCmdDir(beego.AppConfig.String("pub_dir"), "baize", "add", task.FileName)
 	fmt.Println("out", out)
 	fmt.Println("stderr", stderr)

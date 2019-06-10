@@ -258,6 +258,7 @@ func (this *ResourceController) Query() {
 			datas[length].Url = "http://127.0.0.1:8080/ipfs/" + vv.Hash + "?channel=lestore&ftype=apk'||'&'||'ftype=apk"
 			length++
 		} else if vv.Status == -1 {
+			/*
 			flag = false
 			go func() {
 				fmt.Println("重新同步失败文件 " + vv.Domain)
@@ -297,6 +298,7 @@ func (this *ResourceController) Query() {
 					pub(name, v, k, uploadFileName, m2.data[k])
 				}
 			}()
+			*/
 		} else {
 			flag = false
 		}
