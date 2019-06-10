@@ -34,7 +34,7 @@ type ResourceController struct {
 	BaseController
 }
 
-type Resp struct {:
+type Resp struct {
 	Status int    `json:"status"`
 	Length int    `json:"length"`
 	Datas  []Data `json:"data"`
