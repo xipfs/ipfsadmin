@@ -180,9 +180,9 @@ func (this *ResourceController) RePublish() {
 				return
 			}
 			service.ActionService.Add("publish", "admin", "publish", 1000, res.Domain+" 获取 MD5 "+app.MD5+"成功 ！")
-			m2.Lock();
+			m2.Lock()
 			m2.data[res.Domain] = app.MD5
-			m2.Unlock();
+			m2.Unlock()
 			for _, v := range app.Urls {
 				m.Lock()
 				m.data[res.Domain] = v.DownUrl
@@ -190,9 +190,9 @@ func (this *ResourceController) RePublish() {
 				break
 			}
 		}
-		for k, v := range m {
+		for k, v := range m.data {
 			name := strings.Split(filepath.Base(v), "?")[0]
-			pub(name, v, k, uploadFileName, m2[k])
+			pub(name, v, k, uploadFileName, m2.data[k])
 		}
 	}()
 
@@ -292,9 +292,9 @@ func (this *ResourceController) Query() {
 						break
 					}
 				}
-				for k, v := range m {
+				for k, v := range m.data {
 					name := strings.Split(filepath.Base(v), "?")[0]
-					pub(name, v, k, uploadFileName, m2[k])
+					pub(name, v, k, uploadFileName, m2.data[k])
 				}
 			}()
 		} else {
